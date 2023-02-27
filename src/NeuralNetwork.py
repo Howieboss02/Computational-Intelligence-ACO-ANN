@@ -34,3 +34,11 @@ class Perceptron:
 class ANN:
     def __init__(self):
         pass
+
+class Layer:
+    def __init__(self, n: int, function: str):
+        self.n = n                  # Number of neurons
+        self.function = function    # Activation function
+
+
+
