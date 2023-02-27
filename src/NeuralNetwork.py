@@ -3,14 +3,14 @@
 import numpy as np
 
 def step_function(input: float) -> float:
-    return 1 if input >= 0 else 0
+    return 1 * (input >= 0)
 
 class Perceptron:
     def __init__(self, lr: float, epochs: int) -> None:
         self.lr = lr
         self.epochs = epochs
 
-    def train(self, X: np.array, y: np.array) -> list:
+    def fit(self, X: np.array, y: np.array) -> list:
         weights = np.zeros((X.shape[1] + 1, 1))
         error_list = []
 
