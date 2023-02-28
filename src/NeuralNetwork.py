@@ -32,24 +32,26 @@ class Perceptron:
         return error_list
 
 class Activation:
-    def __init__(self):
+    def __init__(self, K: int = 0, alpha: float = 0, beta: float = 0):
+        '''
+        K - number of possible classes for softmax
+        alpha - slope of the line for z < 0 for LReLU
+        beta - slope for the line for z >= 0 for LReLU
+        '''
         pass
 
 
-    def softmax(self, z, K: int):
+    def softmax(self, z):
         ''' Softmax activation function for output layer
         z - input
-        K - number of possible classes
         '''
         pass
 
-    def LReLU(self, z, alpha: float, beta: float):
+    def LReLU(self, z):
         ''' LReLU activation function for hidden layer
         z - input
-        alpha - slope of the line for z < 0
-        beta - slope for the line for z >= 0
         '''
-        pass
+        return np.maximum(z, np.zeros(1))
 
 class Loss:
     def __init__(self):
@@ -63,13 +65,13 @@ class Loss:
         pass
 
 class ANN:
-    def __init__(self, hidden_layer_sizes: list, lr: float, activation_hidden: str, activation_output: str, loss_finction: str, number_of_features: int = 10):
+    def __init__(self, hidden_layer_sizes: list, lr: float, activations: list, loss_finction: str, number_of_features: int = 10):
         '''
         initialize weights using He initialization
         '''
-        self.weights = [np.random.normal(loc = 0.0, scale=  2 / (j - 1), size = (i, j)) for i, j in zip([number_of_features] + hidden_layer_sizes[:-1], hidden_layer_sizes)]
+        self.weights = [np.random.normal(loc = 0.0, scale=  2 / (j), size = (i + 1, j)) for i, j in zip([number_of_features] + hidden_layer_sizes[:-1], hidden_layer_sizes)]
         self.lr = lr
-        # self.activation_hidden
+        self.activations = activations
         # self.activation_output
         # self.loss_finction
 
@@ -79,8 +81,17 @@ class ANN:
     def predict(self, X_test: np.array):
         pass
 
-    def feed_foward(self):
-        pass
+    def feed_foward(self, X):
+        X = np.insert(X, 0, 1, axis=1)
+        for W_i, activation in zip(self.weights, self.activations):
+            print("1: ", X)
+            X = np.dot(X, W_i)
+            print("2: ", X)
+            print("a: ", activation)
+            X = activation(X)
+            print("3: ", X)
+
+        return X
 
     def back_propagation(self):
         pass
