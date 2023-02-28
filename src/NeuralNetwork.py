@@ -31,8 +31,58 @@ class Perceptron:
         self.weights = weights
         return error_list
 
-class ANN:
+class Activation:
     def __init__(self):
+        pass
+
+
+    def softmax(self, z, K: int):
+        ''' Softmax activation function for output layer
+        z - input
+        K - number of possible classes
+        '''
+        pass
+
+    def LReLU(self, z, alpha: float, beta: float):
+        ''' LReLU activation function for hidden layer
+        z - input
+        alpha - slope of the line for z < 0
+        beta - slope for the line for z >= 0
+        '''
+        pass
+
+class Loss:
+    def __init__(self):
+        pass
+    
+    def categorical_cross_entropy(self, y, K: int):
+        '''
+        y - input
+        K - number of possible classes
+        '''
+        pass
+
+class ANN:
+    def __init__(self, hidden_layer_sizes: list, lr: float, activation_hidden: str, activation_output: str, loss_finction: str, number_of_features: int = 10):
+        '''
+        initialize weights using He initialization
+        '''
+        self.weights = [np.random.normal(loc = 0.0, scale=  2 / (j - 1), size = (i, j)) for i, j in zip([number_of_features] + hidden_layer_sizes[:-1], hidden_layer_sizes)]
+        self.lr = lr
+        # self.activation_hidden
+        # self.activation_output
+        # self.loss_finction
+
+    def fit(self, X_train: np.array, y_train: np.array):
+        pass
+
+    def predict(self, X_test: np.array):
+        pass
+
+    def feed_foward(self):
+        pass
+
+    def back_propagation(self):
         pass
 
 class Layer:
