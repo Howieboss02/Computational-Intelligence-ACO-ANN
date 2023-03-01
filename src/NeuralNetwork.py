@@ -72,26 +72,26 @@ class ANN:
         self.weights = [np.random.normal(loc = 0.0, scale=  2 / (j), size = (i + 1, j)) for i, j in zip([number_of_features] + hidden_layer_sizes[:-1], hidden_layer_sizes)]
         self.lr = lr
         self.activations = activations
-        # self.activation_output
-        # self.loss_finction
 
     def fit(self, X_train: np.array, y_train: np.array):
         pass
 
-    def predict(self, X_test: np.array):
-        pass
-
-    def feed_foward(self, X):
-        X = np.insert(X, 0, 1, axis=1)
+    def predict(self, X: np.array):
         for W_i, activation in zip(self.weights, self.activations):
-            print("1: ", X)
-            X = np.dot(X, W_i)
-            print("2: ", X)
-            print("a: ", activation)
+            X = np.insert(X, 0, 1, axis=1)
+            X = X @ W_i
             X = activation(X)
-            print("3: ", X)
 
-        return X
+        return X.flatten()
+    
+    def feed_foward(self, X):
+
+        for W_i, activation in zip(self.weights, self.activations):
+            X = np.insert(X, 0, 1, axis=1)
+            X = X @ W_i
+            X = activation(X)
+
+        return X.flatten()
 
     def back_propagation(self):
         pass
