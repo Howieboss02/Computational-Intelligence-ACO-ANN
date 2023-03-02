@@ -32,9 +32,8 @@ class Perceptron:
         return error_list
 
 class Activation:
-    def __init__(self, K: int = 0, alpha: float = 0, beta: float = 0):
+    def __init__(self, alpha: float = 0, beta: float = 0):
         '''
-        K - number of possible classes for softmax
         alpha - slope of the line for z < 0 for LReLU
         beta - slope for the line for z >= 0 for LReLU
         '''
@@ -45,27 +44,28 @@ class Activation:
         ''' Softmax activation function for output layer
         z - input
         '''
-        pass
+        # subtract max value to get rid of dividing by a large numbers
+        e_z = np.exp(z - np.max(z))
+        return e_z / e_z.sum(axis=-1, keepdims=True)
 
     def LReLU(self, z):
         ''' LReLU activation function for hidden layer
         z - input
         '''
-        return np.maximum(z, np.zeros(1))
-
+        np.where(z < 0, self.alpha * z, self.beta * z)
 class Loss:
     def __init__(self):
         pass
     
-    def categorical_cross_entropy(self, y, K: int):
+    def categorical_cross_entropy(self, y_true, y_pred):
         '''
-        y - input
-        K - number of possible classes
+        y_true - correct label
+        y_pred - label predicted by a model
         '''
-        pass
+        return -np.sum(y_true * np.log(y_pred + 10**-100))
 
 class ANN:
-    def __init__(self, hidden_layer_sizes: list, lr: float, activations: list, loss_finction: str, number_of_features: int = 10):
+    def __init__(self, hidden_layer_sizes: list, lr: float, activations: list, loss_finction: Loss, number_of_features: int = 10):
         '''
         initialize weights using He initialization
         '''
@@ -78,20 +78,17 @@ class ANN:
 
     def predict(self, X: np.array):
         for W_i, activation in zip(self.weights, self.activations):
+            # insert a column representing base value
             X = np.insert(X, 0, 1, axis=1)
+
             X = X @ W_i
             X = activation(X)
 
-        return X.flatten()
+        # chose a label with the highest probability
+        return X.argmax(axis=1) + 1
     
     def feed_foward(self, X):
-
-        for W_i, activation in zip(self.weights, self.activations):
-            X = np.insert(X, 0, 1, axis=1)
-            X = X @ W_i
-            X = activation(X)
-
-        return X.flatten()
+        pass
 
     def back_propagation(self):
         pass
