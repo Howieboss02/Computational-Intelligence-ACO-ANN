@@ -2,6 +2,18 @@
 # However, make sure that when your main notebook is run, it executes the steps indicated in the assignment.
 import numpy as np
 
+def train_test_val_split(X, Y, train_size, test_size):
+    # compute sizes of sets
+    train_size = int(train_size * X.shape[0])
+    test_size = int(test_size * X.shape[0])
+
+    # shuffle indexes to get random division into sets
+    idx = np.random.permutation(X.shape[0])
+
+    # assign indexes of sets
+    train_idx, test_idx, val_idx = idx[:train_size], idx[train_size : train_size + test_size], idx[train_size + test_size:]
+    return X[train_idx,:], X[test_idx,:], X[val_idx,:], Y[train_idx,], Y[test_idx,], Y[val_idx,]
+
 def step_function(input: float) -> float:
     return 1 if input >= 0 else 0
 
