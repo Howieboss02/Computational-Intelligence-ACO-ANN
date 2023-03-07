@@ -2,6 +2,18 @@
 # However, make sure that when your main notebook is run, it executes the steps indicated in the assignment.
 import numpy as np
 
+def train_test_val_split(X, Y, train_size, test_size):
+    # compute sizes of sets
+    train_size = int(train_size * X.shape[0])
+    test_size = int(test_size * X.shape[0])
+
+    # shuffle indexes to get random division into sets
+    idx = np.random.permutation(X.shape[0])
+
+    # assign indexes of sets
+    train_idx, test_idx, val_idx = idx[:train_size], idx[train_size : train_size + test_size], idx[train_size + test_size:]
+    return X[train_idx,:], X[test_idx,:], X[val_idx,:], Y[train_idx,], Y[test_idx,], Y[val_idx,]
+
 def step_function(input: float) -> float:
     return 1 if input >= 0 else 0
 
@@ -32,54 +44,62 @@ class Perceptron:
         return error_list
 
 class Activation:
-    def __init__(self):
+    def __init__(self, alpha: float = 0, beta: float = 0):
+        '''
+        alpha - slope of the line for z < 0 for LReLU
+        beta - slope for the line for z >= 0 for LReLU
+        '''
         pass
 
 
-    def softmax(self, z, K: int):
+    def softmax(self, z):
         ''' Softmax activation function for output layer
         z - input
-        K - number of possible classes
         '''
-        pass
+        # subtract max value to get rid of dividing by a large numbers
+        e_z = np.exp(z - np.max(z))
+        return e_z / e_z.sum(axis=-1, keepdims=True)
 
-    def LReLU(self, z, alpha: float, beta: float):
+    def LReLU(self, z):
         ''' LReLU activation function for hidden layer
         z - input
-        alpha - slope of the line for z < 0
-        beta - slope for the line for z >= 0
         '''
-        pass
-
+        np.where(z < 0, self.alpha * z, self.beta * z)
 class Loss:
     def __init__(self):
         pass
     
-    def categorical_cross_entropy(self, y, K: int):
+    def categorical_cross_entropy(self, y_true, y_pred):
         '''
-        y - input
-        K - number of possible classes
+        y_true - correct label
+        y_pred - label predicted by a model
         '''
-        pass
+        return -np.sum(y_true * np.log(y_pred + 10**-100))
 
 class ANN:
-    def __init__(self, hidden_layer_sizes: list, lr: float, activation_hidden: str, activation_output: str, loss_finction: str, number_of_features: int = 10):
+    def __init__(self, hidden_layer_sizes: list, lr: float, activations: list, loss_finction: Loss, number_of_features: int = 10):
         '''
         initialize weights using He initialization
         '''
-        self.weights = [np.random.normal(loc = 0.0, scale=  2 / (j - 1), size = (i, j)) for i, j in zip([number_of_features] + hidden_layer_sizes[:-1], hidden_layer_sizes)]
+        self.weights = [np.random.normal(loc = 0.0, scale=  2 / (j), size = (i + 1, j)) for i, j in zip([number_of_features] + hidden_layer_sizes[:-1], hidden_layer_sizes)]
         self.lr = lr
-        # self.activation_hidden
-        # self.activation_output
-        # self.loss_finction
+        self.activations = activations
 
     def fit(self, X_train: np.array, y_train: np.array):
         pass
 
-    def predict(self, X_test: np.array):
-        pass
+    def predict(self, X: np.array):
+        for W_i, activation in zip(self.weights, self.activations):
+            # insert a column representing base value
+            X = np.insert(X, 0, 1, axis=1)
 
-    def feed_foward(self):
+            X = X @ W_i
+            X = activation(X)
+
+        # chose a label with the highest probability
+        return X.argmax(axis=1) + 1
+    
+    def feed_foward(self, X):
         pass
 
     def back_propagation(self):
