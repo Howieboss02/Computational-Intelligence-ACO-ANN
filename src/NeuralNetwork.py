@@ -67,6 +67,8 @@ class Activation:
         z - input
         '''
         np.where(z < 0, self.alpha * z, self.beta * z)
+        return z
+
 class Loss:
     def __init__(self):
         pass
