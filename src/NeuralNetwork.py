@@ -49,7 +49,9 @@ class Activation:
         alpha - slope of the line for z < 0 for LReLU
         beta - slope for the line for z >= 0 for LReLU
         '''
-        pass
+        self.alpha = alpha
+        self.beta = beta
+
 
 
     def softmax(self, z):
@@ -81,7 +83,7 @@ class ANN:
         '''
         initialize weights using He initialization
         '''
-        self.weights = [np.random.normal(loc = 0.0, scale=  2 / (j), size = (i + 1, j)) for i, j in zip([number_of_features] + hidden_layer_sizes[:-1], hidden_layer_sizes)]
+        self.weights = [np.random.normal(loc = 0.0, scale =  2 / (j), size = (i + 1, j)) for i, j in zip([number_of_features] + hidden_layer_sizes[:-1], hidden_layer_sizes)]
         self.lr = lr
         self.activations = activations
 
