@@ -88,7 +88,7 @@ class ANN:
         initialize weights using He initialization. These weights include the biases in them as well.
         '''
         self.weights = [np.random.normal(loc = 0.0, scale =  2 / (j), size = (i, j))
-                        for i, j in zip([number_of_features] + hidden_layer_sizes[:-1], hidden_layer_sizes)]
+                        for i, j in zip(hidden_layer_sizes, [number_of_features] + hidden_layer_sizes[:-1])]
         self.biases = [np.random.randn(x, 1) for x in hidden_layer_sizes]
         self.lr = lr
         self.loss_function = loss_function
@@ -116,7 +116,7 @@ class ANN:
         X = x
         for W_i, b_i, activation in zip(self.weights, self.biases, self.activations):
             # Calculate the layer and save it in the zetas
-            X = np.dot(W_i.T, X).reshape(-1, 1)
+            X = np.dot(W_i, X).reshape(-1, 1)
             X += b_i
 
             zetas.append(X)
@@ -129,7 +129,7 @@ class ANN:
 
     def predict(self, X: np.array):
         for W_i, b_i, activation in zip(self.weights, self.biases, self.activations):
-            X = np.dot(W_i.T, X).reshape(-1, 1)
+            X = np.dot(W_i, X).reshape(-1, 1)
             X += b_i
             X = activation(X)
 
@@ -141,10 +141,9 @@ class ANN:
             batches = create_mini_batches(X, y, batch_size)
 
             for batch in batches:
-                print(batch)
                 self.update_weights_with_batch(batch)
 
-            print("Epoch " + str(i) + " done out of " + str(num_of_epochs))
+            print("Epoch " + str(i + 1) + " done out of " + str(num_of_epochs))
 
     def back_propagation(self, X, y):
         '''
@@ -171,7 +170,7 @@ class ANN:
         for i in reversed(range(len(self.hidden_layer_sizes) - 1)):
 
             weights = self.weights[i + 1]
-            delta = np.dot(weights, delta) * self.activations[i](neuron_values[i])
+            delta = np.dot(weights.T, delta) * self.activations[i](neuron_values[i])
             biases_gradients[i] = delta
             weights_gradients[i] = np.dot(delta, applied_neuron_values[i].reshape(1, -1))
 
@@ -184,8 +183,6 @@ class ANN:
 
         for x, y in batch:
             datapoint_weight_gradient, datapoint_bias_gradient = self.back_propagation(x, y)
-            print("Weight: ", weight_gradients[0].shape)
-            print("Dp: ", datapoint_weight_gradient[0].shape)
             bias_gradients = [bg + pbg for bg, pbg in zip(bias_gradients, datapoint_bias_gradient)]
             weight_gradients = [wg + pwg for wg, pwg in zip(weight_gradients, datapoint_weight_gradient)]
 
