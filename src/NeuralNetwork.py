@@ -110,6 +110,35 @@ class ANN:
     def back_propagation(self):
         pass
 
+'''
+Function for dividing the train set into batches of "batch_size" 
+'''
+def create_mini_batches(X, y, batch_size):
+    batches = []
+    '''Add y values to the corresponding feature values'''
+    data = np.hstack((X, y))
+    np.random.shuffle(data)
+    num_of_batches = data.shape[0] // batch_size
+
+    for i in range(0, num_of_batches):
+        '''Take "batch_size" consecutive elements from data'''
+        # print("Batch from: ", i * batch_size, " to ", (i + 1) * batch_size)
+        batch = data[i * batch_size : (i + 1) * batch_size]
+        X_batch = batch[:, :-1]
+        # Each y_value is in its own list
+        y_batch = batch[:, -1].reshape((-1, 1))
+        batches.append((X_batch, y_batch))
+
+    '''If there are some elements left, create new batch for them'''
+    if data.shape[0] % batch_size != 0:
+        # print("Last batch from: ", num_of_batches * batch_size, " to ", data.shape[0])
+        batch = data[num_of_batches * batch_size : data.shape[0]]
+        X_batch = batch[:, :-1]
+        # Each y_value is in its own list
+        y_batch = batch[:, -1].reshape((-1, 1))
+        batches.append((X_batch, y_batch))
+    return batches
+
 class Layer:
     def __init__(self, n: int, function: str):
         self.n = n                  # Number of neurons
