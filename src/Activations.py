@@ -14,8 +14,16 @@ class Activation:
         z - input
         '''
         # subtract max value to get rid of dividing by a large numbers
-        e_z = np.exp(z - np.max(z))
-        return e_z / e_z.sum(axis=-1, keepdims=True)
+        # e_z = np.exp(z - np.max(z))
+        # return e_z / e_z.sum(axis=-1, keepdims=True)
+        # r = z.copy()
+        # r = r.squeeze()
+        r = z
+        exp_x = np.exp(r - np.max(r))  # subtract the maximum value for numerical stability
+        return exp_x / np.sum(exp_x)
+
+    def sigmoid(self, z):
+        return 1 / (1 + np.exp(-z))
 
     def LReLU(self, z):
         ''' LReLU activation function for hidden layer

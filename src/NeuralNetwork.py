@@ -52,16 +52,13 @@ class Perceptron:
 
 
 class Loss:
-    def __init__(self):
-        pass
-    
     def categorical_cross_entropy(self, y_true, y_pred):
         '''
         y_true - correct label
         y_pred - label predicted by a model
         '''
         return -np.sum(y_true * np.log(y_pred + 10**-100))
-    
+
     def squared_error(self, y_true, y_pred, der = False):
         '''
         y_true - correct label
@@ -69,8 +66,7 @@ class Loss:
         '''
         if not der:
             return np.sum((y_true - y_pred)**2)
-        else:
-            return 2 * (y_pred - y_true)
+        return 2 * (y_pred - y_true)
 
 class ANN:
     '''
@@ -78,12 +74,12 @@ class ANN:
     :param hidden_layer_sizes: list of integers, the ith element represents the number of neurons in the ith hidden layer.
     :param lr: learning rate
     :param activations: list of activation functions to be used in hidden layers
-    :param loss_finction: loss function to be used
+    :param loss_function: loss function to be used
     :param number_of_features: number of features in the dataset
     :param random_state: random seed
     '''
 
-    def __init__(self, hidden_layer_sizes: list, lr: float, activations: list, loss_function: Loss, number_of_features: int = 10, random_state: int = 42):
+    def __init__(self, hidden_layer_sizes: list, lr: float, activations: list, loss_function: Loss, number_of_features: int = 10, random_state: int = 42, batch_size: int = 32):
         '''
         initialize weights using He initialization. These weights include the biases in them as well.
         '''
@@ -96,11 +92,27 @@ class ANN:
         self.random_state = random_state
         self.hidden_layer_sizes = hidden_layer_sizes
         self.number_of_features = number_of_features
+        self.batch_size = batch_size
 
 
-    def fit(self, X_train: np.array, y_train: np.array):
-        pass
+    def fit(self, features: np.array, targets: np.array, num_of_epochs: int):
+        x_train, x_test, x_val, y_train, y_test, y_val = train_test_val_split(features, targets, 0.6, 0.2)
+        print("Y: ", y_test.shape)
+        print("X: ", x_test.shape)
+        self.train(x_train, y_train, num_of_epochs, self.batch_size)
+        accuracy = self.evaluate(x_test, y_test)
+        print("Accuracy: ", accuracy)
 
+    def evaluate(self, x_test, y_test):
+        i = 0
+        score = 0
+        for x in x_test:
+            pred = self.predict(x)
+            print(pred)
+            if(pred == y_test[i]):
+                score += 1
+            i += 1
+        return score / len(y_test)
 
     def feed_forward(self, x):
         """
@@ -112,7 +124,7 @@ class ANN:
         alphas = []
         zetas = []
 
-        alphas.append(x)
+        alphas.append(x.reshape(-1, 1))
         X = x
         for W_i, b_i, activation in zip(self.weights, self.biases, self.activations):
             # Calculate the layer and save it in the zetas
@@ -134,8 +146,9 @@ class ANN:
             X = activation(X)
 
         # chose a label with the highest probability
+        print(X)
         return X.argmax(axis=1) + 1
-    
+
     def train(self, X, y, num_of_epochs, batch_size):
         for i in range(num_of_epochs):
             batches = create_mini_batches(X, y, batch_size)
@@ -186,8 +199,8 @@ class ANN:
             bias_gradients = [bg + pbg for bg, pbg in zip(bias_gradients, datapoint_bias_gradient)]
             weight_gradients = [wg + pwg for wg, pwg in zip(weight_gradients, datapoint_weight_gradient)]
 
-        self.biases = [b - (bg * self.lr / len(list(batch))) for b, bg in zip(self.biases, bias_gradients)]
-        self.weights = [w - (wg * self.lr / len(list(batch))) for w, wg in zip(self.weights, weight_gradients)]
+        self.biases = [b - (bg * self.lr / self.batch_size) for b, bg in zip(self.biases, bias_gradients)]
+        self.weights = [w - (wg * self.lr / self.batch_size) for w, wg in zip(self.weights, weight_gradients)]
 
 def create_mini_batches(X: np.array, y: np.array, batch_size: int):
     """
