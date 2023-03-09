@@ -103,7 +103,8 @@ class ANN:
         # chose a label with the highest probability
         return X.argmax(axis=1) + 1
     
-    def feed_foward(self, X):
+    def train(self, X):
+        #back_propagation()
         pass
 
     def back_propagation(self):
