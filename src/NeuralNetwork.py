@@ -110,12 +110,9 @@ class ANN:
 
         alphas.append(x)
         X = x
-        for W_i, activation in zip(self.weights, self.activations):
-            # insert a column representing base value
-            X = np.insert(X, 0, 1, axis=1)
-
+        for W_i, b_i, activation in zip(self.weights, self.biases, self.activations):
             # Calculate the layer and save it in the zetas
-            X = X @ W_i
+            X = X @ W_i + b_i
             zetas.append(X)
 
             # Calculate the activation function for that layer and save it in the alphas
@@ -125,11 +122,8 @@ class ANN:
         return alphas, zetas
 
     def predict(self, X: np.array):
-        for W_i, activation in zip(self.weights, self.activations):
-            # insert a column representing base value
-            X = np.insert(X, 0, 1, axis=1)
-
-            X = X @ W_i
+        for W_i, b_i, activation in zip(self.weights, self.biases, self.activations):
+            X = X @ W_i + b_i
             X = activation(X)
 
         # chose a label with the highest probability
@@ -156,9 +150,6 @@ class ANN:
         applied_neuron_values, neuron_values = self.feed_foward(X)
 
         cost = self.loss_function.squared_error(y, applied_neuron_values[-1])
-
-        dw1 = cost * alphas[-1]
-        gradients_of_weights[-1][:][] = cost
 
 
 def create_mini_batches(X: np.array, y: np.array, batch_size: int):
