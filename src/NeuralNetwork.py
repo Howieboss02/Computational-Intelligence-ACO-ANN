@@ -62,12 +62,16 @@ class Loss:
         '''
         return -np.sum(y_true * np.log(y_pred + 10**-100))
     
-    def squared_error(self, y_true, y_pred):
+    def squared_error(self, y_true, y_pred, der = False):
         '''
         y_true - correct label
         y_pred - label predicted by a model
         '''
-        return np.sum((y_true - y_pred)**2)
+        if(not der):
+            return np.sum((y_true - y_pred)**2)
+        else:
+            # Not sure if sum here
+            return 2 * np.sum(y_pred - y_true)
 
 class ANN:
     '''
@@ -155,10 +159,35 @@ class ANN:
 
         applied_neuron_values, neuron_values = self.feed_foward(X)
 
+        # Error on the last layer
         cost = self.loss_function.squared_error(y, applied_neuron_values[-1])
 
-        dw1 = cost * alphas[-1]
-        gradients_of_weights[-1][:][] = cost
+        # Derivative of z with respect to w
+        dzw = applied_neuron_values[-2]
+
+        # Derviative of alpha with respect to zeta
+        daz = self.activations[-1](neuron_values[-1], der = True)
+
+        # Derivative of cost with respect to alpha
+        dca = self.loss_function.squared_error(y, applied_neuron_values[-1], der = True)
+
+        # Final derivative cost with respect ot weight
+        final_derivative = dzw * daz * dca
+
+
+        # for x, y in
+        # layer_2_delta = (applied_neuron_values[-1] - y)
+        # layer_1_delta = layer_2_delta.dot(self.weights[-1].T) * self.activations[-1](applied_neuron_values[-1], der=True)
+        #
+        # self.weights[-1] -= self.lr * applied_neuron_values[-2].T.dot(layer_2_delta)
+        # self.weights[-2] -= self.lr * applied_neuron_values[-3].T.dot(layer_1_delta)
+
+
+
+
+
+        # dw1 = cost * alphas[-1]
+        # gradients_of_weights[-1][:][] = cost
 
 
 def create_mini_batches(X: np.array, y: np.array, batch_size: int):

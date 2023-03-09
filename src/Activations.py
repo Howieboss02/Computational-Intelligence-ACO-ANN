@@ -17,14 +17,19 @@ class Activation:
         e_z = np.exp(z - np.max(z))
         return e_z / e_z.sum(axis=-1, keepdims=True)
 
-    def LReLU(self, z):
+    def LReLU(self, z, der = False):
         ''' LReLU activation function for hidden layer
         z - input
         '''
-        np.where(z < 0, self.alpha * z, self.beta * z)
+        if(not der):
+            np.where(z < 0, self.alpha * z, self.beta * z)
+        else:
+            np.where(z < 0, self.alpha, self.beta)
+        return z
     
-    def LReLU_derivative(self, z):
-        ''' Derivative of LReLU activation function for hidden layer
-        z - input
-        '''
-        np.where(z < 0, self.alpha, self.beta)
+    # def LReLU_derivative(self, z):
+    #     ''' Derivative of LReLU activation function for hidden layer
+    #     z - input
+    #     '''
+    #     np.where(z < 0, self.alpha, self.beta)
+    #     return z
