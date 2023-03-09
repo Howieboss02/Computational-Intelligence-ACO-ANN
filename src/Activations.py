@@ -22,9 +22,11 @@ class Activation:
         z - input
         '''
         np.where(z < 0, self.alpha * z, self.beta * z)
+        return z
     
     def LReLU_derivative(self, z):
         ''' Derivative of LReLU activation function for hidden layer
         z - input
         '''
         np.where(z < 0, self.alpha, self.beta)
+        return z
