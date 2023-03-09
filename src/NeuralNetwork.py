@@ -97,6 +97,33 @@ class ANN:
     def fit(self, X_train: np.array, y_train: np.array):
         pass
 
+
+    def feed_forward(self, x):
+        """
+        Method that calculates the output for each layer in the network.
+        :param x: training input.
+        :return: alphas - list of neuron values after applying activation function.
+        :return: zetas - list of neuron values before applying activation function.
+        """
+        alphas = []
+        zetas = []
+
+        alphas.append(x)
+        X = x
+        for W_i, activation in zip(self.weights, self.activations):
+            # insert a column representing base value
+            X = np.insert(X, 0, 1, axis=1)
+
+            # Calculate the layer and save it in the zetas
+            X = X @ W_i
+            zetas.append(X)
+
+            # Calculate the activation function for that layer and save it in the alphas
+            X = activation(X)
+            alphas.append(X)
+
+        return alphas, zetas
+
     def predict(self, X: np.array):
         for W_i, activation in zip(self.weights, self.activations):
             # insert a column representing base value
@@ -108,7 +135,8 @@ class ANN:
         # chose a label with the highest probability
         return X.argmax(axis=1) + 1
     
-    def feed_foward(self, X):
+    def train(self, X):
+        #back_propagation()
         pass
 
     def back_propagation(self, X, y):
@@ -130,6 +158,42 @@ class ANN:
         cost = self.loss_function.squared_error(y, applied_neuron_values[-1])
 
         gradients_of_weights[-1][:][] = cost
+
+
+def create_mini_batches(X: np.array, y: np.array, batch_size: int):
+    """
+    Function for dividing the train set into batches of "batch_size".
+
+    :param X: The training features.
+    :param y: The labels for the features.
+    :param batch_size: Size of the batch.
+    :return: List of tuples (X_mini_batch, y_mini_batch) where X and y have "batch_size" length.
+    """
+
+    batches = []
+    '''Add y values to the corresponding feature values'''
+    data = np.hstack((X, y))
+    np.random.shuffle(data)
+    num_of_batches = data.shape[0] // batch_size
+
+    for i in range(0, num_of_batches):
+        '''Take "batch_size" consecutive elements from data'''
+        # print("Batch from: ", i * batch_size, " to ", (i + 1) * batch_size)
+        batch = data[i * batch_size : (i + 1) * batch_size]
+        X_batch = batch[:, :-1]
+        # Each y_value is in its own list
+        y_batch = batch[:, -1].reshape((-1, 1))
+        batches.append((X_batch, y_batch))
+
+    '''If there are some elements left, create new batch for them'''
+    if data.shape[0] % batch_size != 0:
+        # print("Last batch from: ", num_of_batches * batch_size, " to ", data.shape[0])
+        batch = data[num_of_batches * batch_size : data.shape[0]]
+        X_batch = batch[:, :-1]
+        # Each y_value is in its own list
+        y_batch = batch[:, -1].reshape((-1, 1))
+        batches.append((X_batch, y_batch))
+    return batches
 
 class Layer:
     def __init__(self, n: int, function: str):
