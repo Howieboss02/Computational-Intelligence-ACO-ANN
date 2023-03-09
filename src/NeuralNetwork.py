@@ -84,7 +84,7 @@ class ANN:
         '''
         initialize weights using He initialization. These weights include the biases in them as well.
         '''
-        self.weights = [np.random.normal(loc = 0.0, scale =  2 / (j), size = (i + 1, j)) 
+        self.weights = [np.random.normal(loc = 0.0, scale =  2 / (j), size = (i, j))
                         for i, j in zip([number_of_features] + hidden_layer_sizes[:-1], hidden_layer_sizes)]
         self.biases = [np.random.randn(x, 1) for x in hidden_layer_sizes]
         self.lr = lr
@@ -150,6 +150,13 @@ class ANN:
         applied_neuron_values, neuron_values = self.feed_foward(X)
 
         cost = self.loss_function.squared_error(y, applied_neuron_values[-1])
+
+    def update_weights_with_batch(self, batch):
+        bias_gradients = [np.zeros(x, 1) for x in self.hidden_layer_sizes]
+        weight_gradients = [np.zeros(i, j) for i, j in zip([self.number_of_features] + self.hidden_layer_sizes[:-1], self.hidden_layer_sizes)]
+
+        for x, y in batch:
+            datapoint_weight_gradient, datapoint_bias_gradient = self.back_propagation(x, y)
 
 
 def create_mini_batches(X: np.array, y: np.array, batch_size: int):
