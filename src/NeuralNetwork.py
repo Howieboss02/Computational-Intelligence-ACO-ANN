@@ -92,6 +92,33 @@ class ANN:
     def fit(self, X_train: np.array, y_train: np.array):
         pass
 
+
+    def feed_forward(self, x):
+        """
+        Method that calculates the output for each layer in the network.
+        :param x: training input.
+        :return: alphas - list of neuron values after applying activation function.
+        :return: zetas - list of neuron values before applying activation function.
+        """
+        alphas = []
+        zetas = []
+
+        alphas.append(x)
+        X = x
+        for W_i, activation in zip(self.weights, self.activations):
+            # insert a column representing base value
+            X = np.insert(X, 0, 1, axis=1)
+
+            # Calculate the layer and save it in the zetas
+            X = X @ W_i
+            zetas.append(X)
+
+            # Calculate the activation function for that layer and save it in the alphas
+            X = activation(X)
+            alphas.append(X)
+
+        return alphas, zetas
+
     def predict(self, X: np.array):
         for W_i, activation in zip(self.weights, self.activations):
             # insert a column representing base value
@@ -110,10 +137,17 @@ class ANN:
     def back_propagation(self):
         pass
 
-'''
-Function for dividing the train set into batches of "batch_size" 
-'''
-def create_mini_batches(X, y, batch_size):
+
+def create_mini_batches(X: np.array, y: np.array, batch_size: int):
+    """
+    Function for dividing the train set into batches of "batch_size".
+
+    :param X: The training features.
+    :param y: The labels for the features.
+    :param batch_size: Size of the batch.
+    :return: List of tuples (X_mini_batch, y_mini_batch) where X and y have "batch_size" length.
+    """
+
     batches = []
     '''Add y values to the corresponding feature values'''
     data = np.hstack((X, y))
