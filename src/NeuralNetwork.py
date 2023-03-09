@@ -137,7 +137,7 @@ class ANN:
     
     def train(self, X):
         #back_propagation()
-        pass
+        return [], []
 
     def back_propagation(self, X, y):
         '''
@@ -153,10 +153,11 @@ class ANN:
         neuron_values = [] #zetas
         val = X
 
-        applied_neuron_values, neuron_values = self.feed_foward_all_layers(X)
+        applied_neuron_values, neuron_values = self.feed_foward(X)
 
         cost = self.loss_function.squared_error(y, applied_neuron_values[-1])
 
+        dw1 = cost * alphas[-1]
         gradients_of_weights[-1][:][] = cost
 
 
