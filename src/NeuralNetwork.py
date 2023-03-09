@@ -86,7 +86,7 @@ class ANN:
         '''
         self.weights = [np.random.normal(loc = 0.0, scale =  2 / (j), size = (i + 1, j)) 
                         for i, j in zip([number_of_features] + hidden_layer_sizes[:-1], hidden_layer_sizes)]
-    
+        self.biases = [np.random.randn(x, 1) for x in hidden_layer_sizes]
         self.lr = lr
         self.momentum = momentum
         self.loss_function = loss_function
@@ -195,11 +195,5 @@ def create_mini_batches(X: np.array, y: np.array, batch_size: int):
         y_batch = batch[:, -1].reshape((-1, 1))
         batches.append((X_batch, y_batch))
     return batches
-
-class Layer:
-    def __init__(self, n: int, function: str):
-        self.n = n                  # Number of neurons
-        self.function = function    # Activation function
-
 
 
