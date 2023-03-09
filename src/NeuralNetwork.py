@@ -62,19 +62,15 @@ class Loss:
         '''
         return -np.sum(y_true * np.log(y_pred + 10**-100))
     
-    def squared_error(self, y_true, y_pred):
+    def squared_error(self, y_true, y_pred, der = False):
         '''
         y_true - correct label
         y_pred - label predicted by a model
         '''
-        return np.sum((y_true - y_pred)**2)
-
-    def get_delta_squared_error(self, y_true, y_pred):
-        '''
-        y_true - correct label
-        y_pred - label predicted by a model
-        '''
-        return 2 * (y_pred - y_true)
+        if not der:
+            return np.sum((y_true - y_pred)**2)
+        else:
+            return 2 * (y_pred - y_true)
 
 class ANN:
     '''
@@ -87,7 +83,7 @@ class ANN:
     :param random_state: random seed
     '''
 
-    def __init__(self, hidden_layer_sizes: list, lr: float, momentum:float, activations: list, loss_function: Loss, number_of_features: int = 10, random_state: int = 42):
+    def __init__(self, hidden_layer_sizes: list, lr: float, activations: list, loss_function: Loss, number_of_features: int = 10, random_state: int = 42):
         '''
         initialize weights using He initialization. These weights include the biases in them as well.
         '''
@@ -95,10 +91,11 @@ class ANN:
                         for i, j in zip([number_of_features] + hidden_layer_sizes[:-1], hidden_layer_sizes)]
         self.biases = [np.random.randn(x, 1) for x in hidden_layer_sizes]
         self.lr = lr
-        self.momentum = momentum
         self.loss_function = loss_function
         self.activations = activations
         self.random_state = random_state
+        self.hidden_layer_sizes = hidden_layer_sizes
+        self.number_of_features = number_of_features
 
 
     def fit(self, X_train: np.array, y_train: np.array):
@@ -119,7 +116,9 @@ class ANN:
         X = x
         for W_i, b_i, activation in zip(self.weights, self.biases, self.activations):
             # Calculate the layer and save it in the zetas
-            X = X @ W_i + b_i
+            X = np.dot(W_i.T, X).reshape(-1, 1)
+            X += b_i
+
             zetas.append(X)
 
             # Calculate the activation function for that layer and save it in the alphas
@@ -130,15 +129,22 @@ class ANN:
 
     def predict(self, X: np.array):
         for W_i, b_i, activation in zip(self.weights, self.biases, self.activations):
-            X = X @ W_i + b_i
+            X = np.dot(W_i.T, X).reshape(-1, 1)
+            X += b_i
             X = activation(X)
 
         # chose a label with the highest probability
         return X.argmax(axis=1) + 1
     
-    def train(self, X):
-        #back_propagation()
-        return [], []
+    def train(self, X, y, num_of_epochs, batch_size):
+        for i in range(num_of_epochs):
+            batches = create_mini_batches(X, y, batch_size)
+
+            for batch in batches:
+                print(batch)
+                self.update_weights_with_batch(batch)
+
+            print("Epoch " + str(i) + " done out of " + str(num_of_epochs))
 
     def back_propagation(self, X, y):
         '''
@@ -149,33 +155,42 @@ class ANN:
         '''
 
 
-        weitghts_gradients = [np.zeros(w.shape) for w in self.weights]
+        weights_gradients = [np.zeros(w.shape) for w in self.weights]
         biases_gradients = [np.zeros(b.shape) for b in self.biases]
 
-        applied_neuron_values, neuron_values = self.feed_foward(X)
+        applied_neuron_values, neuron_values = self.feed_forward(X)
 
 
-        delta = self.loss_function.get_delta_squared_error(y, applied_neuron_values[-1])
+        delta = self.loss_function(y, applied_neuron_values[-1], der = True)
 
         biases_gradients[-1] = delta
-        weitghts_gradients[-1] = np.dot(neuron_values[-2].T, delta)
+        weights_gradients[-1] = np.dot(delta, neuron_values[-2].T)
 
 
         # Moving backwards through the layers
-        for i in reversed(range(len(self.hidden_layer_sizes - 1))):
-            weights = self.weights[i + 1]
-            delta = np.dot(weights.T, delta) * Activation(0.1, 1).LReLU_derivative(neuron_values[i])
-            biases_gradients[i] = delta
-            weitghts_gradients[i] = np.dot(delta, applied_neuron_values[i].T)
+        for i in reversed(range(len(self.hidden_layer_sizes) - 1)):
 
-        return weitghts_gradients, biases_gradients
+            weights = self.weights[i + 1]
+            delta = np.dot(weights, delta) * self.activations[i](neuron_values[i])
+            biases_gradients[i] = delta
+            weights_gradients[i] = np.dot(delta, applied_neuron_values[i].reshape(1, -1))
+
+        return weights_gradients, biases_gradients
 
     def update_weights_with_batch(self, batch):
-        bias_gradients = [np.zeros(x, 1) for x in self.hidden_layer_sizes]
-        weight_gradients = [np.zeros(i, j) for i, j in zip([self.number_of_features] + self.hidden_layer_sizes[:-1], self.hidden_layer_sizes)]
+        bias_gradients = [np.zeros((x, 1)) for x in self.hidden_layer_sizes]
+        weight_gradients = [np.zeros(w.shape) for w in self.weights]
+            # [np.zeros((i, j)) for i, j in zip([self.number_of_features] + self.hidden_layer_sizes[:-1], self.hidden_layer_sizes)]
 
         for x, y in batch:
             datapoint_weight_gradient, datapoint_bias_gradient = self.back_propagation(x, y)
+            print("Weight: ", weight_gradients[0].shape)
+            print("Dp: ", datapoint_weight_gradient[0].shape)
+            bias_gradients = [bg + pbg for bg, pbg in zip(bias_gradients, datapoint_bias_gradient)]
+            weight_gradients = [wg + pwg for wg, pwg in zip(weight_gradients, datapoint_weight_gradient)]
+
+        self.biases = [b - (bg * self.lr / len(list(batch))) for b, bg in zip(self.biases, bias_gradients)]
+        self.weights = [w - (wg * self.lr / len(list(batch))) for w, wg in zip(self.weights, weight_gradients)]
 
 def create_mini_batches(X: np.array, y: np.array, batch_size: int):
     """
@@ -200,7 +215,7 @@ def create_mini_batches(X: np.array, y: np.array, batch_size: int):
         X_batch = batch[:, :-1]
         # Each y_value is in its own list
         y_batch = batch[:, -1].reshape((-1, 1))
-        batches.append((X_batch, y_batch))
+        batches.append(zip(X_batch, y_batch))
 
     '''If there are some elements left, create new batch for them'''
     if data.shape[0] % batch_size != 0:
@@ -209,7 +224,7 @@ def create_mini_batches(X: np.array, y: np.array, batch_size: int):
         X_batch = batch[:, :-1]
         # Each y_value is in its own list
         y_batch = batch[:, -1].reshape((-1, 1))
-        batches.append((X_batch, y_batch))
+        batches.append(zip(X_batch, y_batch))
     return batches
 
 
