@@ -69,6 +69,13 @@ class Loss:
         '''
         return np.sum((y_true - y_pred)**2)
 
+    def get_delta_squared_error(self, y_true, y_pred):
+        '''
+        y_true - correct label
+        y_pred - label predicted by a model
+        '''
+        return 2 * (y_pred - y_true)
+
 class ANN:
     '''
     An artificial neural network for classification problem.
@@ -140,16 +147,28 @@ class ANN:
         :param y: correct label
         :return: gradient
         '''
-        gradients_of_weights = [np.zeros(w.shape) for w in self.weights]
 
-        
-        applied_neuron_values = [X] # alphas
-        neuron_values = [] #zetas
-        val = X
+
+        weitghts_gradients = [np.zeros(w.shape) for w in self.weights]
+        biases_gradients = [np.zeros(b.shape) for b in self.biases]
 
         applied_neuron_values, neuron_values = self.feed_foward(X)
 
-        cost = self.loss_function.squared_error(y, applied_neuron_values[-1])
+
+        delta = self.loss_function.get_delta_squared_error(y, applied_neuron_values[-1])
+
+        biases_gradients[-1] = delta
+        weitghts_gradients[-1] = np.dot(neuron_values[-2].T, delta)
+
+
+        # Moving backwards through the layers
+        for i in reversed(range(len(self.hidden_layer_sizes - 1))):
+            weights = self.weights[i + 1]
+            delta = np.dot(weights.T, delta) * Activation(0.1, 1).LReLU_derivative(neuron_values[i])
+            biases_gradients[i] = delta
+            weitghts_gradients[i] = np.dot(delta, applied_neuron_values[i].T)
+
+        return weitghts_gradients, biases_gradients
 
     def update_weights_with_batch(self, batch):
         bias_gradients = [np.zeros(x, 1) for x in self.hidden_layer_sizes]
@@ -157,7 +176,6 @@ class ANN:
 
         for x, y in batch:
             datapoint_weight_gradient, datapoint_bias_gradient = self.back_propagation(x, y)
-
 
 def create_mini_batches(X: np.array, y: np.array, batch_size: int):
     """
