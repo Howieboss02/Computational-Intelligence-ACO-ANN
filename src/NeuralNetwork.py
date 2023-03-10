@@ -19,19 +19,16 @@ def split_dataset(X, Y, test_size):
 def train_test_val_split(X, Y, train_size, test_size):
     assert 0 <= train_size <= 1
     assert 0 <= test_size <= 1
-    # compute sizes of sets
-    # train_size = int(train_size * len(X))
-    # test_size = int(test_size * len(X))
 
-    # data = list(zip(X, Y))
-    np.random.shuffle(X)
-    np.random.shuffle(Y)
+    data = list(zip(X, Y))
+    np.random.shuffle(data)
 
     # assign indexes of sets
     train_index = int(len(X) * train_size)
+
     test_index = int(len(X) * test_size) + train_index
 
-    return X[:train_index], X[train_index: test_index], X[test_index:], Y[:train_index], Y[train_index: test_index], Y[test_index:]
+    return data[:train_index], data[train_index: test_index], data[test_index:]
 
 class LogLikelihood:
     def get_difference(a, y, z):
@@ -207,16 +204,26 @@ class ANN:
             score = self.score(test_data)
             print("Score (accuracy) for this epoch = ", score)
 
-    def only_fit(self, data, number_of_epochs):
+    def only_fit(self, data, number_of_epochs, validate):
         """
             Method to train the neural network by learning the weights through
             stochastic gradient descent and backpropagation.
-            :param X:
-            :param number_of_eopchs:
-            :param mini_batch_size:
+            :param data:
+            :param number_of_epochs:
         """
         n = len(data)
+        max_score = 0
         for i in range(number_of_epochs):
+            current_score = self.score(validate)
+            if(current_score > max_score): max_score = current_score
+            j = 5
+            if(current_score + 0.02 < max_score):
+                j -= 1
+                if(j == 0): break
+            i = 3
+            if(current_score > 0.88):
+                i -= 1
+                if(i == 0): break
             np.random.shuffle(data)
             mini_batches = self.create_mini_batches(data, self.batch_size, n)
 
