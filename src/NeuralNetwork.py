@@ -1,54 +1,22 @@
 # Note: you are free to organize your code in the way you find most convenient.
 # However, make sure that when your main notebook is run, it executes the steps indicated in the assignment.
 import numpy as np
-from Activations import *
+from Activations import step_function, softmax, sigmoid, LReLU
 
-def train_test_val_split(X, Y, train_size, test_size):
-    # compute sizes of sets
+def train_test_split(X, Y, test_size):
+
+    # split into train and test sets
+    assert 0 < test_size < 1, "test_size must be between 0 and 1"
+    train_size = 1 - test_size
     train_size = int(train_size * X.shape[0])
-    test_size = int(test_size * X.shape[0])
+    test_size = X.shape[0] - train_size
 
     # shuffle indexes to get random division into sets
     idx = np.random.permutation(X.shape[0])
 
     # assign indexes of sets
-    train_idx, test_idx, val_idx = idx[:train_size], idx[train_size : train_size + test_size], idx[train_size + test_size:]
-    return X[train_idx,:], X[test_idx,:], X[val_idx,:], Y[train_idx,], Y[test_idx,], Y[val_idx,]
-
-def step_function(input: float) -> float:
-    return 1 if input >= 0 else 0
-
-class Perceptron:
-    '''
-    A single perceptron to be used in a neural network. This is used for the XOR problem.
-    :param lr: learning rate
-    :param epochs: number of epochs to train for
-    '''
-
-    def __init__(self, lr: float, epochs: int) -> None:
-        self.lr = lr
-        self.epochs = epochs
-
-    def train(self, X: np.array, y: np.array) -> list:
-        weights = np.zeros((X.shape[1] + 1, 1))
-        error_list = []
-
-        for epoch in range(self.epochs):
-
-            error = 0
-
-            for xi, yi in zip(X, y):
-                xi = np.insert(xi, 0, 1).reshape((-1, 1))
-                z = np.dot(xi.T, weights)
-                y_hat = step_function(z)
-                loss = yi - y_hat
-                if (loss != 0): error += 1
-                weights += xi * self.lr * loss
-
-            error_list.append(error)
-
-        self.weights = weights
-        return error_list
+    train_idx, test_idx = idx[:train_size], idx[train_size : train_size + test_size]
+    return X[train_idx,:], X[test_idx,:], Y[train_idx,], Y[test_idx,]
 
 
 class Loss:

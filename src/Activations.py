@@ -1,6 +1,6 @@
 import numpy as np
 
-def step(z):
+def step_function(z):
     ''' Step activation function for output layer
     z - input
     '''
