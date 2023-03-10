@@ -1,7 +1,8 @@
 import numpy as np
 
 def step_function(z):
-    ''' Step activation function for output layer
+    '''
+    Step activation function for output layer
     z - input
     '''
     return np.where(z >= 0, 1, 0)
