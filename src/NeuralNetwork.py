@@ -259,14 +259,17 @@ class ANN:
         """
         n = len(data)
         max_score = 0
+        i = 3
+        j = 5
         for i in range(number_of_epochs):
             current_score = self.score(validate)
+            self.epoch_score[0].append(current_score)
             if(current_score > max_score): max_score = current_score
-            j = 5
+
             if(current_score + 0.02 < max_score):
                 j -= 1
                 if(j == 0): break
-            i = 3
+
             if(current_score > 0.88):
                 i -= 1
                 if(i == 0): break
@@ -309,6 +312,22 @@ class ANN:
             corr = corr + 1 if np.argmax(output) == np.argmax(y) else corr
         accuracy = corr / all
         return accuracy
+
+    def predict_on_known_data(self, test_data):
+        predictions = []
+        y_true = []
+        for x, y in test_data:
+            output = self.forward_propagate(x)
+            predictions.append(np.argmax(output))
+            y_true.append(np.argmax(y))
+        return predictions, y_true
+
+    def predict(self, test_data):
+        predictions = []
+        for x in test_data:
+            output = self.forward_propagate(x)
+            predictions.append(np.argmax(output))
+        return predictions
 
 
 def kfold_cross_validation(X, y, hidden_layer_sizes, learning_rate, loss_function, k=4, num_of_features=10,
