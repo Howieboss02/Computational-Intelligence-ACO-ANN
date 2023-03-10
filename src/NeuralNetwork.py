@@ -163,7 +163,7 @@ class ANN:
 
         return alphas, zetas
 
-    def fit(self, X, number_of_epochs):
+    def fit(self, X, y, number_of_epochs):
         """
         Method to train the neural network by learning the weights through
         stochastic gradient descent and backpropagation.
@@ -171,16 +171,19 @@ class ANN:
         :param number_of_eopchs: 
         :param mini_batch_size: 
         """
-        n = len(X)
+        train_data, test_data = split_dataset(X, y, 0.2)
+        n = len(train_data)
 
         for i in range(number_of_epochs):
-            np.random.shuffle(X)
-            mini_batches = self.create_mini_batches(X, self.batch_size, n)
+            np.random.shuffle(train_data)
+            mini_batches = self.create_mini_batches(train_data, self.batch_size, n)
 
             for mini_batch in mini_batches:
                 self.perform_batch_updates(mini_batch, self.lr)
 
             print("Epoch ", str(i + 1), " done.")
+            score = self.score(test_data)
+            print("Score (accuracy) for this epoch = ", score)
 
     def create_mini_batches(self, X, batch_size, n):
         batches = []
@@ -205,3 +208,39 @@ class ANN:
         layer = softmax(np.dot(weight, layer) + bias)
         return layer
 
+    def score(self, test_data):
+        all = len(test_data)
+        corr = 0
+        for x, y in test_data:
+            output = self.forward_propagate(x)
+            corr = corr + 1 if np.argmax(output) == np.argmax(y) else corr
+        accuracy = corr / all
+        return accuracy
+
+def kfold_cross_validation(X, y, hidden_layer_sizes, learning_rate, loss_function, k=5, num_of_features = 10, random_state = 42, batch_size = 32):
+    """
+    Performs k-fold cross-validation on the input data using the specified model.
+    Returns the average accuracy score across all folds.
+    """
+    num_of_trainings = 10
+    n = len(X)
+    fold_size = n // k
+    indices = np.arange(n)
+    np.random.shuffle(indices)
+    scores = []
+    for i in range(k):
+        start = (int)(i * fold_size)
+        end = (int)((i + 1) * fold_size)
+        val_indices = indices[start:end]
+        train_indices = np.concatenate((indices[:start], indices[end:]))
+        X_train, y_train = X[train_indices], y[train_indices]
+        X_test, y_test = X[val_indices], y[val_indices]
+        avg_score = 0
+        for j in range(num_of_trainings):
+            model = ANN(hidden_layer_sizes, learning_rate, loss_function, num_of_features, random_state, batch_size)
+            model.fit(X_train, y_train)
+            score = model.score(X_test, y_test)
+            avg_score += score
+        avg_score /= num_of_trainings
+        scores.append(avg_score)
+    return np.mean(scores)
