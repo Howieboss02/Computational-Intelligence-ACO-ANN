@@ -74,7 +74,8 @@ class ANN:
         self.batch_size = batch_size
         self.random_state = random_state
 
-    
+        self.epoch_score = []
+
 
     def perform_batch_updates(self, small_batch, lr):
         """
@@ -184,6 +185,29 @@ class ANN:
 
             print("Epoch ", str(i + 1), " done.")
             score = self.score(test_data)
+            print("Score (accuracy) for this epoch = ", score)
+
+    def fit_train_val(self, train_data, validation_data, number_of_epochs):
+        """
+        Method to train the neural network by learning the weights through
+        stochastic gradient descent and backpropagation.
+        Keeps writing the score for each epoch
+        :param X:
+        :param number_of_eopchs:
+        :param mini_batch_size:
+        """
+        n = len(train_data)
+
+        for i in range(number_of_epochs):
+            np.random.shuffle(train_data)
+            mini_batches = self.create_mini_batches(train_data, self.batch_size, n)
+
+            for mini_batch in mini_batches:
+                self.perform_batch_updates(mini_batch, self.lr)
+
+            print("Epoch ", str(i + 1), " done.")
+            score = self.score(validation_data)
+            self.epoch_score.append(score)
             print("Score (accuracy) for this epoch = ", score)
 
     def only_fit(self, data, number_of_epochs):
