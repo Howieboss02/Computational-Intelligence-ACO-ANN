@@ -33,8 +33,12 @@ def LReLU(z, derivative=False):
     alpha = 0.1
     beta = 1
     if not derivative:
-        np.maximum(alpha*z, beta*z)
+        return np.maximum(alpha*z, beta*z)
     else:
-        dx = np.ones_like(z)
-        dx[z < 0] = alpha
-        return dx
+        result = np.copy(z)
+        result[result < 0] *= alpha
+        return result
+        # dx = np.ones_like(z)
+        # Alpha * x (?)
+        # return np.maximum(alpha * z, z)
+        # return dx

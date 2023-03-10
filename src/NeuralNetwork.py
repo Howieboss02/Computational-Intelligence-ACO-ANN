@@ -2,7 +2,7 @@
 # However, make sure that when your main notebook is run, it executes the steps indicated in the assignment.
 import numpy as np
 from Activations import step_function, softmax, sigmoid, LReLU
-from LossFunctions import QuadraticCost, LogLikelihood
+# from LossFunctions import *
 
 # split data into train and test sets
 
@@ -16,6 +16,30 @@ def split_dataset(X, Y, test_size):
     index = int(len(data) * test_size)
     return data[index:], data[:index]
 
+class LogLikelihood:
+
+    def get_difference(a, y, z):
+        return a - y
+
+    def get_cost(data, network):
+        total = 0
+        for x, y in data:
+            output = network.forward_propagate(x)
+            total += np.dot(y.reshape(y.shape[0]), np.log(output).reshape(output.shape[0]))
+        return - (total / len(data))
+
+class QuadraticCost:
+
+    def get_difference(a, y, z):
+        return (a - y) * sigmoid(z, derivative=True)
+
+    def get_cost(data, network):
+        all = 0
+        for x, y in data:
+            output = network.forward_propagate(x)
+            all += 0.5 * (np.linalg.norm(output - y) ** 2)
+        return -(all / len(data))
+
 class ANN:
     '''
     An artificial neural network for classification problem.
@@ -28,25 +52,27 @@ class ANN:
     '''
 
     def __init__(self, hidden_layer_sizes: list, lr: float, loss_function: str, number_of_features: int = 10, random_state: int = 42, batch_size: int = 32):
-        '''
-        initialize weights using He initialization. 
-        '''
-        
         self.lr = lr
         if loss_function == 'square':
             self.loss_function = QuadraticCost
         elif loss_function == 'log':
             self.loss_function = LogLikelihood
+        else:
+            print("Function not recognized. Abort.")
+            return
 
         # creating a list of layer sizes
         self.hidden_layer_sizes = hidden_layer_sizes
+
         self.number_of_features = number_of_features
+
         # prepend the number of features to the list of hidden layer sizes
         self.hidden_layer_sizes.insert(0, number_of_features)
 
-        #innitialize weights and biases using He initialization
+        # initialise weights using He initialisation
         self.weights = [np.random.normal(loc = 0.0, scale =  2 / (j), size = (i, j))
                         for i, j in zip(hidden_layer_sizes[1:], hidden_layer_sizes[:-1])]
+        # initialise biases using random
         self.biases = [np.random.randn(x, 1) for x in hidden_layer_sizes[1:]]
 
         self.batch_size = batch_size
@@ -93,45 +119,46 @@ class ANN:
         bias_gradients = [np.zeros(bias.shape) for bias in self.biases]
         weight_gradients = [np.zeros(weight.shape) for weight in self.weights]
 
-        alphas = [x]
-        zetas = []
-        a = alphas[0]
-        # Feed point forward and store all activations and outputs
-        for w, b in zip(self.weights[:-1], self.biases[:-1]):
-            z = np.dot(w, a) + b
-            zetas.append(z)
-            a = sigmoid(z)
-            alphas.append(a)
+        # Alphas - neuron layer *after* applying activation function
+        # Zetas - neuron layer *before* applying activation function
+        alphas, zetas = self.calculate_az(x)
 
-        w, b = self.weights[-1], self.biases[-1]
-        z = np.dot(w, a) + b
-        zetas.append(z)
-        a = softmax(z)
-        alphas.append(a)
-
-        # Calculate cost (delta) for output layer and use it to calculate
-        # gradients of the output layer
         delta = self.loss_function.get_difference(alphas[-1], y, zetas[-1])
 
         bias_gradients[-1] = delta
-
         weight_gradients[-1] = np.dot(delta, alphas[-2].T)
 
-        # Move back through the network calculating gradients by updating
-        # delta
-
+        # Go through the network backwards
         for i in reversed(range(len(self.hidden_layer_sizes) - 2)):
 
             weights = self.weights[i + 1]
-            delta = np.dot(weights.T, delta) * sigmoid(zetas[i], derivative=True)
+            delta = np.dot(weights.T, delta) * LReLU(zetas[i], derivative=True)
 
             bias_gradients[i] = delta
             weight_gradients[i] = np.dot(delta, alphas[i].T)
 
         return weight_gradients, bias_gradients
-    
-    # def fit(self, X, number_of_eopchs, mini_batch_size, learning_rate, validation_data=None):
-    def fit(self, X, number_of_eopchs, mini_batch_size, learning_rate):
+
+    def calculate_az(self, x):
+        alphas = [x]
+        zetas = []
+        zeta = x
+
+        # Feed forward the network to calculate alphas and zetas
+        for weight, bias in zip(self.weights[:-1], self.biases[:-1]):
+            zeta = np.dot(weight, zeta) + bias
+            zetas.append(zeta)
+            alpha = LReLU(zeta)
+            alphas.append(alpha)
+
+        weight, bias = self.weights[-1], self.biases[-1]
+        zeta = np.dot(weight, zeta) + bias
+        zetas.append(zeta)
+        alpha = softmax(zeta)
+        alphas.append(alpha)
+        return alphas, zetas
+
+    def fit(self, X, number_of_epochs, mini_batch_size):
         """
         Method to train the neural network by learning the weights through
         stochastic gradient descent and backpropagation.
@@ -141,26 +168,28 @@ class ANN:
         """
         n = len(X)
 
-        for i in range(number_of_eopchs):
+        for i in range(number_of_epochs):
             np.random.shuffle(X)
             mini_batches = [X[j:j + mini_batch_size] for j in range(0, n, mini_batch_size)]
 
             for mini_batch in mini_batches:
-                self.perform_batch_updates(mini_batch, learning_rate)
+                self.perform_batch_updates(mini_batch, self.lr)
 
-            print(f"Epoch {i + 1}")
+            print("Epoch ", str(i + 1), " done.")
 
     def forward_propagate(self, layer):
         """
-        Forward propagate the input through the network and get the output
-        :param x: The input to the ann
-        :return: The output of the ann
+        Propagate the input and get the output layer
+        :param layer: input layer
+        :return: output layer
         """
-        # forward propagate the input through the network for all but the last layer
+        # Propagate the input through the layers up to the last one
         for weight, bias in zip(self.weights[:-1], self.biases[:-1]):
-            layer = sigmoid(weight @ layer + bias)
+            # layer = sigmoid(np.dot(weight, layer) + bias)
+            layer = LReLU(np.dot(weight, layer) + bias)
 
-        w, b = self.weights[-1], self.biases[-1]
-        layer = softmax(np.dot(w, layer) + b)
+        # Use softmax function for the last layer
+        weight, bias = self.weights[-1], self.biases[-1]
+        layer = softmax(np.dot(weight, layer) + bias)
         return layer
-    
+
