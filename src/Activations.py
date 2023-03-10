@@ -45,3 +45,13 @@ def LReLU(z, derivative=False):
         # Alpha * x (?)
         # return np.maximum(alpha * z, z)
         # return dx
+
+def tanh(z, derivative=False):
+    '''
+    Tanh activation function for hidden layer
+    z - input
+    '''
+    if not derivative:
+        return np.tanh(z)
+    else:
+        return 1 - np.tanh(z)**2
