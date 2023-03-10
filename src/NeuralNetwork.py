@@ -236,18 +236,18 @@ class ANN:
         accuracy = corr / all
         return accuracy
 
-def kfold_cross_validation(X, y, hidden_layer_sizes, learning_rate, loss_function, k=4, num_of_features = 10, random_state = 42, batch_size = 32, num_of_epochs = 8):
+def kfold_cross_validation(X, y, hidden_layer_sizes, learning_rate, loss_function, k=4, num_of_features = 10, random_state = 42, batch_size = 32, num_of_epochs = 10):
     """
     Performs k-fold cross-validation on the input data using the specified model.
     Returns the average accuracy score across all folds.
     """
-    num_of_trainings = 1
+    num_of_trainings = 10
 
     data = list(zip(X, y))
     np.random.shuffle(data)
 
     n = len(data)
-    data = np.array(data)
+    data = np.array(data, dtype='object')
     fold_size = n // k
     scores = []
     for i in range(k):
@@ -258,17 +258,13 @@ def kfold_cross_validation(X, y, hidden_layer_sizes, learning_rate, loss_functio
         train_indices = list(set(range(len(data))) - set(val_indices))
         data_train = data[train_indices]
         data_test = data[val_indices]
-        print("Data_train size: ", len(data_train))
-
-        print("Data_test size: ", len(data_test))
-        avg_score = 0
+        avg_score = []
         for j in range(num_of_trainings):
             print(" - ", j + 1, " / ", num_of_trainings, " iterations.")
             model = ANN(hidden_layer_sizes, learning_rate, loss_function, num_of_features, random_state, batch_size)
             model.only_fit(data_train, num_of_epochs)
             score = model.score(data_test)
             print("Score: ", score)
-            avg_score += score
-        avg_score /= num_of_trainings
+            avg_score.append(score)
         scores.append(avg_score)
-    return np.mean(scores)
+    return scores
