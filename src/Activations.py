@@ -28,3 +28,13 @@ class Activation:
         z - input
         '''
         np.where(z < 0, self.alpha, self.beta)
+
+    def tanh(z, derivative=False):
+        '''
+        Tanh activation function for hidden layer
+        z - input
+        '''
+        if not derivative:
+            return np.tanh(z)
+        else:
+            return 1 - np.tanh(z)**2
