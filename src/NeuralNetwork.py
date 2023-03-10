@@ -163,24 +163,27 @@ class ANN:
 
         return alphas, zetas
 
-    def fit(self, X, number_of_epochs):
+    def fit(self, X, y, number_of_epochs, report_epochs = True):
         """
         Method to train the neural network by learning the weights through
         stochastic gradient descent and backpropagation.
-        :param X: 
-        :param number_of_eopchs: 
-        :param mini_batch_size: 
+        :param X:
+        :param number_of_eopchs:
+        :param mini_batch_size:
         """
-        n = len(X)
+        train_data, test_data = split_dataset(X, y, 0.2)
+        n = len(train_data)
 
         for i in range(number_of_epochs):
-            np.random.shuffle(X)
-            mini_batches = self.create_mini_batches(X, self.batch_size, n)
+            np.random.shuffle(train_data)
+            mini_batches = self.create_mini_batches(train_data, self.batch_size, n)
 
             for mini_batch in mini_batches:
                 self.perform_batch_updates(mini_batch, self.lr)
 
-            print("Epoch ", str(i + 1), " done.")
+            if report_epochs: print("Epoch ", str(i + 1), " done.")
+            score = self.score(test_data)
+            print("Score (accuracy) for this epoch = ", score)
 
     def create_mini_batches(self, X, batch_size, n):
         batches = []
@@ -204,4 +207,13 @@ class ANN:
         weight, bias = self.weights[-1], self.biases[-1]
         layer = softmax(np.dot(weight, layer) + bias)
         return layer
+
+    def score(self, test_data):
+        all = len(test_data)
+        corr = 0
+        for x, y in test_data:
+            output = self.forward_propagate(x)
+            corr = corr + 1 if np.argmax(output) == np.argmax(y) else corr
+        accuracy = corr / all
+        return accuracy
 
