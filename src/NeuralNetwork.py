@@ -163,13 +163,13 @@ class ANN:
 
         return alphas, zetas
 
-    def fit(self, X, y, number_of_epochs):
+    def fit(self, X, y, number_of_epochs, report_epochs = True):
         """
         Method to train the neural network by learning the weights through
         stochastic gradient descent and backpropagation.
-        :param X: 
-        :param number_of_eopchs: 
-        :param mini_batch_size: 
+        :param X:
+        :param number_of_eopchs:
+        :param mini_batch_size:
         """
         train_data, test_data = split_dataset(X, y, 0.2)
         n = len(train_data)
@@ -181,7 +181,7 @@ class ANN:
             for mini_batch in mini_batches:
                 self.perform_batch_updates(mini_batch, self.lr)
 
-            print("Epoch ", str(i + 1), " done.")
+            if report_epochs: print("Epoch ", str(i + 1), " done.")
             score = self.score(test_data)
             print("Score (accuracy) for this epoch = ", score)
 
