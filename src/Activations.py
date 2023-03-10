@@ -17,15 +17,15 @@ def softmax(z):
     exp_x = np.exp(r - np.max(r))  # subtract the maximum value for numerical stability
     return exp_x / np.sum(exp_x)
 
-    def tanh(z, derivative=False):
-        '''
-        Tanh activation function for hidden layer
-        z - input
-        '''
-        if not derivative:
-            return np.tanh(z)
-        else:
-            return 1 - np.tanh(z)**2
+def tanh(z, derivative=False):
+    '''
+    Tanh activation function for hidden layer
+    z - input
+    '''
+    if not derivative:
+        return np.tanh(z)
+    else:
+        return 1 - np.tanh(z)**2
 
 def sigmoid(z, derivative=False):
     '''
