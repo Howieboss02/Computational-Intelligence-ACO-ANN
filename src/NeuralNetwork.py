@@ -3,16 +3,33 @@
 import numpy as np
 from Activations import softmax, sigmoid, LReLU
 
+
 # split data into train and test sets
 def split_dataset(X, Y, test_size):
 
     # compute sizes of sets
     assert 0 <= test_size <= 1
-    data = list(zip(X, Y))    
+    data = list(zip(X, Y))
     np.random.shuffle(data)
 
     index = int(len(data) * test_size)
     return data[index:], data[:index]
+
+
+# split data into train, test and validation sets
+def train_test_val_split(X, Y, train_size, test_size):
+    assert 0 <= train_size <= 1
+    assert 0 <= test_size <= 1
+
+    data = list(zip(X, Y))
+    np.random.shuffle(data)
+
+    # assign indexes of sets
+    train_index = int(len(X) * train_size)
+
+    test_index = int(len(X) * test_size) + train_index
+
+    return data[:train_index], data[train_index: test_index], data[test_index:]
 
 class LogLikelihood:
     def get_difference(a, y, z):
@@ -25,6 +42,7 @@ class LogLikelihood:
             total += np.dot(y.reshape(y.shape[0]), np.log(output).reshape(output.shape[0]))
         return - (total / len(data))
 
+
 class QuadraticCost:
     def get_difference(a, y, z):
         return (a - y) * sigmoid(z, derivative=True)
@@ -35,6 +53,7 @@ class QuadraticCost:
             output = network.forward_propagate(x)
             all += 0.5 * (np.linalg.norm(output - y) ** 2)
         return -(all / len(data))
+
 
 class ANN:
     """
@@ -47,7 +66,8 @@ class ANN:
     :param random_state: random seed
     """
 
-    def __init__(self, hidden_layer_sizes: list, lr: float, loss_function: str, number_of_features: int = 10, random_state: int = 42, batch_size: int = 32):
+    def __init__(self, hidden_layer_sizes: list, lr: float, loss_function: str, number_of_features: int = 10,
+                 random_state: int = 42, batch_size: int = 32):
         self.lr = lr
         if loss_function == 'square':
             self.loss_function = QuadraticCost
@@ -66,7 +86,7 @@ class ANN:
         # self.hidden_layer_sizes.insert(0, number_of_features)
 
         # initialise weights using He initialisation
-        self.weights = [np.random.normal(loc = 0.0, scale =  2 / (j), size = (i, j))
+        self.weights = [np.random.normal(loc=0.0, scale=2 / (j), size=(i, j))
                         for i, j in zip(hidden_layer_sizes[1:], hidden_layer_sizes[:-1])]
         # initialise biases using random
         self.biases = [np.random.randn(x, 1) for x in hidden_layer_sizes[1:]]
@@ -96,14 +116,15 @@ class ANN:
         for feature, label in small_batch:
             # go back through the network and compute the gradient of the cost function
             point_weight_gradient, point_bias_gradient = self.backpropagation(feature, label)
-            
+
             gradients_of_weights = [wg + pwg for wg, pwg in zip(gradients_of_weights, point_weight_gradient)]
             gradients_of_biases = [bg + pbg for bg, pbg in zip(gradients_of_biases, point_bias_gradient)]
-        
+
         # update weights and biases for the whole batch
-        self.weights = [weight - (lr / len(small_batch)) * weight_gradient for weight, weight_gradient in zip(self.weights, gradients_of_weights)]
-        self.biases = [bias - (lr / len(small_batch)) * bias_gradient for bias, bias_gradient in zip(self.biases, gradients_of_biases)]
-        
+        self.weights = [weight - (lr / len(small_batch)) * weight_gradient for weight, weight_gradient in
+                        zip(self.weights, gradients_of_weights)]
+        self.biases = [bias - (lr / len(small_batch)) * bias_gradient for bias, bias_gradient in
+                       zip(self.biases, gradients_of_biases)]
 
     def backpropagation(self, x, y):
         """
@@ -169,9 +190,9 @@ class ANN:
         Method to train the neural network by learning the weights through
         stochastic gradient descent and backpropagation.
         Keeps writing the score for each epoch
-        :param X: 
-        :param number_of_eopchs: 
-        :param mini_batch_size: 
+        :param X:
+        :param number_of_eopchs:
+        :param mini_batch_size:
         """
         train_data, test_data = split_dataset(X, y, 0.2)
         n = len(train_data)
@@ -212,16 +233,26 @@ class ANN:
             self.epoch_score[1].append(score_train)
             print("Score (accuracy) for this epoch on train: ", score_train, ", on validation: ", score_val)
 
-    def only_fit(self, data, number_of_epochs):
+    def only_fit(self, data, number_of_epochs, validate):
         """
             Method to train the neural network by learning the weights through
             stochastic gradient descent and backpropagation.
-            :param X:
-            :param number_of_eopchs:
-            :param mini_batch_size:
+            :param data:
+            :param number_of_epochs:
         """
         n = len(data)
+        max_score = 0
         for i in range(number_of_epochs):
+            current_score = self.score(validate)
+            if(current_score > max_score): max_score = current_score
+            j = 5
+            if(current_score + 0.02 < max_score):
+                j -= 1
+                if(j == 0): break
+            i = 3
+            if(current_score > 0.88):
+                i -= 1
+                if(i == 0): break
             np.random.shuffle(data)
             mini_batches = self.create_mini_batches(data, self.batch_size, n)
 
@@ -233,7 +264,7 @@ class ANN:
     def create_mini_batches(self, X, batch_size, n):
         batches = []
         for i in range(0, n, batch_size):
-            batch = X[i : i + batch_size]
+            batch = X[i: i + batch_size]
             batches.append(batch)
         return batches
 
@@ -262,7 +293,9 @@ class ANN:
         accuracy = corr / all
         return accuracy
 
-def kfold_cross_validation(X, y, hidden_layer_sizes, learning_rate, loss_function, k=4, num_of_features = 10, random_state = 42, batch_size = 32, num_of_epochs = 10):
+
+def kfold_cross_validation(X, y, hidden_layer_sizes, learning_rate, loss_function, k=4, num_of_features=10,
+                           random_state=42, batch_size=32, num_of_epochs=10):
     """
     Performs k-fold cross-validation on the input data using the specified model.
     Returns the average accuracy score across all folds.
