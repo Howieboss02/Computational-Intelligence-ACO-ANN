@@ -15,6 +15,24 @@ def split_dataset(X, Y, test_size):
     return data[index:], data[:index]
 
 
+# split data into train, test and validation sets
+def train_test_val_split(X, Y, train_size, test_size):
+    assert 0 <= train_size <= 1
+    assert 0 <= test_size <= 1
+    # compute sizes of sets
+    # train_size = int(train_size * len(X))
+    # test_size = int(test_size * len(X))
+
+    # data = list(zip(X, Y))
+    np.random.shuffle(X)
+    np.random.shuffle(Y)
+
+    # assign indexes of sets
+    train_index = int(len(X) * train_size)
+    test_index = int(len(X) * test_size) + train_index
+
+    return X[:train_index], X[train_index: test_index], X[test_index:], Y[:train_index], Y[train_index: test_index], Y[test_index:]
+
 class LogLikelihood:
     def get_difference(a, y, z):
         return a - y
