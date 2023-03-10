@@ -208,6 +208,23 @@ class ANN:
             score = self.score(test_data)
             print("Score (accuracy) for this epoch = ", score)
 
+    def fit_kfold(self, train_data, number_of_epochs):
+        """
+        Method to train the neural network by learning the weights through
+        stochastic gradient descent and backpropagation.
+        Keeps writing the score for each epoch
+        :param train_data:
+        :param number_of_eopchs:
+        """
+        n = len(train_data)
+
+        for i in range(number_of_epochs):
+            np.random.shuffle(train_data)
+            mini_batches = self.create_mini_batches(train_data, self.batch_size, n)
+
+            for mini_batch in mini_batches:
+                self.perform_batch_updates(mini_batch, self.lr)
+
     def fit_train_val(self, train_data, validation_data, number_of_epochs):
         """
         Method to train the neural network by learning the weights through
@@ -321,7 +338,7 @@ def kfold_cross_validation(X, y, hidden_layer_sizes, learning_rate, loss_functio
         for j in range(num_of_trainings):
             print(" - ", j + 1, " / ", num_of_trainings, " iterations.")
             model = ANN(hidden_layer_sizes, learning_rate, loss_function, num_of_features, random_state, batch_size)
-            model.only_fit(data_train, num_of_epochs)
+            model.fit_kfold(data_train, num_of_epochs)
             score = model.score(data_test)
             print("Score: ", score)
             avg_score.append(score)
