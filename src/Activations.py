@@ -1,13 +1,15 @@
 import numpy as np
 
 def step_function(z):
-    ''' Step activation function for output layer
+    '''
+    Step activation function for output layer
     z - input
     '''
     return np.where(z >= 0, 1, 0)
 
 def softmax(z):
-    ''' Softmax activation function for output layer
+    '''
+    Softmax activation function for output layer
     z - input
     '''
 
@@ -16,7 +18,8 @@ def softmax(z):
     return exp_x / np.sum(exp_x)
 
 def sigmoid(z, derivative=False):
-    ''' Sigmoid activation function for hidden layer
+    '''
+    Sigmoid activation function for hidden layer
     z - input
     '''
     res = 1 / (1 + np.exp(-z))
@@ -27,7 +30,8 @@ def sigmoid(z, derivative=False):
      
 
 def LReLU(z, derivative=False):
-    ''' LReLU activation function for hidden layer
+    '''
+    LReLU activation function for hidden layer
     z - input
     '''
     alpha = 0.1
