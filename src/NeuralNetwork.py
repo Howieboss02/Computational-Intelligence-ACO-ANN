@@ -32,7 +32,6 @@ class ANN:
         initialize weights using He initialization. 
         '''
         
-
         self.lr = lr
         if loss_function == 'square':
             self.loss_function = QuadraticCost
@@ -45,77 +44,43 @@ class ANN:
         # prepend the number of features to the list of hidden layer sizes
         self.hidden_layer_sizes.insert(0, number_of_features)
 
-        #innitialize weights and biases
-        # self.weights = [np.random.normal(loc = 0.0, scale =  2 / (j), size = (i, j))
-        #                 for i, j in zip(hidden_layer_sizes, [number_of_features] + hidden_layer_sizes[:-1])]
-        self.weights = [np.random.randn(x, y) for (x, y)
-                        in zip(hidden_layer_sizes[1:], hidden_layer_sizes[:-1])]
+        #innitialize weights and biases using He initialization
+        self.weights = [np.random.normal(loc = 0.0, scale =  2 / (j), size = (i, j))
+                        for i, j in zip(hidden_layer_sizes[1:], hidden_layer_sizes[:-1])]
         self.biases = [np.random.randn(x, 1) for x in hidden_layer_sizes[1:]]
-
 
         self.batch_size = batch_size
         self.random_state = random_state
 
-    def feedforward(self, x):
-        """
-        Method that feeds the input to the neural network passing it
-        through all the layers and returns the result output by the output
-        layer.
-        :param x: The input to the n.n.
-        :return: The output of the n.n.
-        """
-        for w, b in zip(self.weights[:-1], self.biases[:-1]):
-            x = sigmoid(np.dot(w, x) + b)
-        w, b = self.weights[-1], self.biases[-1]
-        x = softmax(np.dot(w, x) + b)
-        return x
+    
 
-    def train(self, data, epochs, mini_batch_size, learning_rate,
-              validation_data=None):
+    def perform_batch_updates(self, small_batch, lr):
         """
-        Method to train the neural network by learning the weights through
-        stochastic gradient descent and backpropagation.
-        :param data: The training data as a list of tuples (vector, label)
-        :param epochs: The number of epochs to train for
-        :param mini_batch_size: The size of the mini batch used for gradient
-        descent
-        :param learning_rate: The learning rate for gradient descent
-        :param validation_data: If supplied will calculate the cost on the
-        train and validation data and plot a graph.
-        :return: None
-        """
-        n = len(data)
-
-        for i in range(epochs):
-            np.random.shuffle(data)
-            mini_batches = [data[j:j + mini_batch_size]
-                            for j in range(0, n, mini_batch_size)]
-
-            for mini_batch in mini_batches:
-                self.update_with_mini_batch(mini_batch, learning_rate)
-
-            print(f"Epoch {i} completed.")
-
-    def update_with_mini_batch(self, mini_batch, learning_rate):
-        """
-        Method that takes a mini batch and updates the weights and bias of the
-        model based on the data in the mini batch.
+        Passes a small batch through the network and updates the weights and biases
         :param mini_batch: random subset of the whole training set
         :param learning_rate: gradient descent learning rate
         :return: None
         """
-        bias_gradients = [np.zeros(bias.shape)
-                          for bias in self.biases]
-        weight_gradients = [np.zeros(weight.shape)
-                            for weight in self.weights]
 
-        for x, y in mini_batch:
-            point_bias_gradient, point_weight_gradient = self.backpropagation(x, y)
-            bias_gradients = [bg + pbg for bg, pbg in zip(bias_gradients, point_bias_gradient)]
-            weight_gradients = [wg + pwg for wg, pwg in zip(weight_gradients, point_weight_gradient)]
+        gradients_of_biases = []
+        gradients_of_weights = []
 
-        self.biases = [b - (learning_rate / len(mini_batch)) * bg for b, bg in zip(self.biases, bias_gradients)]
-        self.weights = [w - (learning_rate / len(mini_batch)) * wg for w, wg in zip(self.weights, weight_gradients)]
+        for b in self.biases:
+            gradients_of_biases.append(np.zeros(b.shape))
+        for w in self.weights:
+            gradients_of_weights.append(np.zeros(w.shape))
+
+        for feature, label in small_batch:
+            # go back through the network and compute the gradient of the cost function
+            point_weight_gradient, point_bias_gradient = self.backpropagation(feature, label)
+            
+            gradients_of_weights = [wg + pwg for wg, pwg in zip(gradients_of_weights, point_weight_gradient)]
+            gradients_of_biases = [bg + pbg for bg, pbg in zip(gradients_of_biases, point_bias_gradient)]
+        
+        #update weights and biases for the whole batch
+        self.weights = [weight - (lr / len(small_batch)) * weight_gradient for weight, weight_gradient in zip(self.weights, gradients_of_weights)]
+        self.biases = [bias - (lr / len(small_batch)) * bias_gradient for bias, bias_gradient in zip(self.biases, gradients_of_biases)]
+        
 
     def backpropagation(self, x, y):
         """
@@ -146,7 +111,7 @@ class ANN:
 
         # Calculate cost (delta) for output layer and use it to calculate
         # gradients of the output layer
-        delta = self.loss_function.get_delta(alphas[-1], y, zetas[-1])
+        delta = self.loss_function.get_difference(alphas[-1], y, zetas[-1])
 
         bias_gradients[-1] = delta
 
@@ -163,168 +128,39 @@ class ANN:
             bias_gradients[i] = delta
             weight_gradients[i] = np.dot(delta, alphas[i].T)
 
-        return bias_gradients, weight_gradients
-
-    def evaluate(self, validation_data):
+        return weight_gradients, bias_gradients
+    
+    # def fit(self, X, number_of_eopchs, mini_batch_size, learning_rate, validation_data=None):
+    def fit(self, X, number_of_eopchs, mini_batch_size, learning_rate):
         """
-        Validates the network based on the validation data and return
-        prediction accuracy.
-        :param validation_data: data to validate model on
-        :return: The prediction accuracy of the model as amount of correctly
-        predicted data points / total data points.
+        Method to train the neural network by learning the weights through
+        stochastic gradient descent and backpropagation.
+        :param X: 
+        :param number_of_eopchs: 
+        :param mini_batch_size: 
         """
-        total = len(validation_data)
-        correct = 0
+        n = len(X)
 
-        for x, y in validation_data:
-            output = self.feedforward(x)
-            if np.argmax(output) == np.argmax(y):
-                correct += 1
+        for i in range(number_of_eopchs):
+            np.random.shuffle(X)
+            mini_batches = [X[j:j + mini_batch_size] for j in range(0, n, mini_batch_size)]
 
-        return correct / total
+            for mini_batch in mini_batches:
+                self.perform_batch_updates(mini_batch, learning_rate)
 
+            print(f"Epoch {i + 1}")
 
+    def forward_propagate(self, layer):
+        """
+        Forward propagate the input through the network and get the output
+        :param x: The input to the ann
+        :return: The output of the ann
+        """
+        # forward propagate the input through the network for all but the last layer
+        for weight, bias in zip(self.weights[:-1], self.biases[:-1]):
+            layer = sigmoid(weight @ layer + bias)
 
-#     def fit(self, features: np.array, targets: np.array, num_of_epochs: int):
-#         x_train, x_test, x_val, y_train, y_test, y_val = train_test_val_split(features, targets, 0.6, 0.2)
-#         print("Y: ", y_test.shape)
-#         print("X: ", x_test.shape)
-#         self.train(x_train, y_train, num_of_epochs, self.batch_size)
-#         accuracy = self.evaluate(x_test, y_test)
-#         print("Accuracy: ", accuracy)
-
-#     def evaluate(self, x_test, y_test):
-#         i = 0
-#         score = 0
-#         for x in x_test:
-#             pred = self.predict(x)
-#             print(pred)
-#             if(pred == y_test[i]):
-#                 score += 1
-#             i += 1
-#         return score / len(y_test)
-
-#     def feed_forward(self, x):
-#         """
-#         Method that calculates the output for each layer in the network.
-#         :param x: training input.
-#         :return: alphas - list of neuron values after applying activation function.
-#         :return: zetas - list of neuron values before applying activation function.
-#         """
-#         alphas = []
-#         zetas = []
-
-#         alphas.append(x.reshape(-1, 1))
-#         X = x
-#         for W_i, b_i, activation in zip(self.weights, self.biases, self.activations):
-#             # Calculate the layer and save it in the zetas
-#             X = np.dot(W_i, X).reshape(-1, 1)
-#             X += b_i
-
-#             zetas.append(X)
-
-#             # Calculate the activation function for that layer and save it in the alphas
-#             X = activation(X)
-#             alphas.append(X)
-
-#         return alphas, zetas
-
-#     def predict(self, X: np.array):
-#         for W_i, b_i, activation in zip(self.weights, self.biases, self.activations):
-#             X = np.dot(W_i, X).reshape(-1, 1)
-#             X += b_i
-#             X = activation(X)
-
-#         # chose a label with the highest probability
-#         print(X)
-#         return X.argmax(axis=1) + 1
-
-#     def train(self, X, y, num_of_epochs, batch_size):
-#         for i in range(num_of_epochs):
-#             batches = create_mini_batches(X, y, batch_size)
-
-#             for batch in batches:
-#                 self.update_weights_with_batch(batch)
-
-#             print("Epoch " + str(i + 1) + " done out of " + str(num_of_epochs))
-
-#     def back_propagation(self, X, y):
-#         '''
-#         Method that implements back propagation algorithm and returns the gradient of the cost function.
-#         :param X: input data
-#         :param y: correct label
-#         :return: gradient
-#         '''
-
-
-#         weights_gradients = [np.zeros(w.shape) for w in self.weights]
-#         biases_gradients = [np.zeros(b.shape) for b in self.biases]
-
-#         applied_neuron_values, neuron_values = self.feed_forward(X)
-
-
-#         delta = self.loss_function(y, applied_neuron_values[-1], der = True)
-
-#         biases_gradients[-1] = delta
-#         weights_gradients[-1] = np.dot(delta, neuron_values[-2].T)
-
-
-#         # Moving backwards through the layers
-#         for i in reversed(range(len(self.hidden_layer_sizes) - 1)):
-
-#             weights = self.weights[i + 1]
-#             delta = np.dot(weights.T, delta) * self.activations[i](neuron_values[i])
-#             biases_gradients[i] = delta
-#             weights_gradients[i] = np.dot(delta, applied_neuron_values[i].reshape(1, -1))
-
-#         return weights_gradients, biases_gradients
-
-#     def update_weights_with_batch(self, batch):
-#         bias_gradients = [np.zeros((x, 1)) for x in self.hidden_layer_sizes]
-#         weight_gradients = [np.zeros(w.shape) for w in self.weights]
-#             # [np.zeros((i, j)) for i, j in zip([self.number_of_features] + self.hidden_layer_sizes[:-1], self.hidden_layer_sizes)]
-
-#         for x, y in batch:
-#             datapoint_weight_gradient, datapoint_bias_gradient = self.back_propagation(x, y)
-#             bias_gradients = [bg + pbg for bg, pbg in zip(bias_gradients, datapoint_bias_gradient)]
-#             weight_gradients = [wg + pwg for wg, pwg in zip(weight_gradients, datapoint_weight_gradient)]
-
-#         self.biases = [b - (bg * self.lr / self.batch_size) for b, bg in zip(self.biases, bias_gradients)]
-#         self.weights = [w - (wg * self.lr / self.batch_size) for w, wg in zip(self.weights, weight_gradients)]
-
-# def create_mini_batches(X: np.array, y: np.array, batch_size: int):
-#     """
-#     Function for dividing the train set into batches of "batch_size".
-
-#     :param X: The training features.
-#     :param y: The labels for the features.
-#     :param batch_size: Size of the batch.
-#     :return: List of tuples (X_mini_batch, y_mini_batch) where X and y have "batch_size" length.
-#     """
-
-#     batches = []
-#     '''Add y values to the corresponding feature values'''
-#     data = np.hstack((X, y))
-#     np.random.shuffle(data)
-#     num_of_batches = data.shape[0] // batch_size
-
-#     for i in range(0, num_of_batches):
-#         '''Take "batch_size" consecutive elements from data'''
-#         # print("Batch from: ", i * batch_size, " to ", (i + 1) * batch_size)
-#         batch = data[i * batch_size : (i + 1) * batch_size]
-#         X_batch = batch[:, :-1]
-#         # Each y_value is in its own list
-#         y_batch = batch[:, -1].reshape((-1, 1))
-#         batches.append(zip(X_batch, y_batch))
-
-#     '''If there are some elements left, create new batch for them'''
-#     if data.shape[0] % batch_size != 0:
-#         # print("Last batch from: ", num_of_batches * batch_size, " to ", data.shape[0])
-#         batch = data[num_of_batches * batch_size : data.shape[0]]
-#         X_batch = batch[:, :-1]
-#         # Each y_value is in its own list
-#         y_batch = batch[:, -1].reshape((-1, 1))
-#         batches.append(zip(X_batch, y_batch))
-#     return batches
-
-
+        w, b = self.weights[-1], self.biases[-1]
+        layer = softmax(np.dot(w, layer) + b)
+        return layer
+    

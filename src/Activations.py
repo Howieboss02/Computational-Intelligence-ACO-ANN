@@ -30,10 +30,11 @@ def LReLU(z, derivative=False):
     ''' LReLU activation function for hidden layer
     z - input
     '''
-    alpha = 0.01
+    alpha = 0.1
     beta = 1
     if not derivative:
-        np.where(z >= 0, beta * z, alpha * z)
+        np.maximum(alpha*z, beta*z)
     else:
-        np.where(z >= 0, beta, alpha)
-    
+        dx = np.ones_like(z)
+        dx[z < 0] = alpha
+        return dx
