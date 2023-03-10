@@ -1,33 +1,21 @@
 import numpy as np
 
-class Activation:
-    def __init__(self, alpha: float = 0, beta: float = 0):
-        '''
-        alpha - slope of the line for z < 0 for LReLU
-        beta - slope for the line for z >= 0 for LReLU
-        '''
-        self.alpha = alpha
-        self.beta = beta
+def step_function(z):
+    '''
+    Step activation function for output layer
+    z - input
+    '''
+    return np.where(z >= 0, 1, 0)
 
-    def softmax(self, z):
-        ''' Softmax activation function for output layer
-        z - input
-        '''
-        # subtract max value to get rid of dividing by a large numbers
-        e_z = np.exp(z - np.max(z))
-        return e_z / e_z.sum(axis=-1, keepdims=True)
+def softmax(z):
+    '''
+    Softmax activation function for output layer
+    z - input
+    '''
 
-    def LReLU(self, z):
-        ''' LReLU activation function for hidden layer
-        z - input
-        '''
-        np.where(z < 0, self.alpha * z, self.beta * z)
-    
-    def LReLU_derivative(self, z):
-        ''' Derivative of LReLU activation function for hidden layer
-        z - input
-        '''
-        np.where(z < 0, self.alpha, self.beta)
+    r = z
+    exp_x = np.exp(r - np.max(r))  # subtract the maximum value for numerical stability
+    return exp_x / np.sum(exp_x)
 
     def tanh(z, derivative=False):
         '''
@@ -38,3 +26,33 @@ class Activation:
             return np.tanh(z)
         else:
             return 1 - np.tanh(z)**2
+
+def sigmoid(z, derivative=False):
+    '''
+    Sigmoid activation function for hidden layer
+    z - input
+    '''
+    res = 1 / (1 + np.exp(-z))
+    if not derivative:
+        return res
+    else:
+        return res * (1 - res)
+     
+
+def LReLU(z, derivative=False):
+    '''
+    LReLU activation function for hidden layer
+    z - input
+    '''
+    alpha = 0.1
+    beta = 1
+    if not derivative:
+        return np.maximum(alpha*z, beta*z)
+    else:
+        result = np.copy(z)
+        result[result < 0] *= alpha
+        return result
+        # dx = np.ones_like(z)
+        # Alpha * x (?)
+        # return np.maximum(alpha * z, z)
+        # return dx
