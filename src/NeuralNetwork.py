@@ -74,7 +74,7 @@ class ANN:
         self.batch_size = batch_size
         self.random_state = random_state
 
-        self.epoch_score = []
+        self.epoch_score = [[], []]
 
 
     def perform_batch_updates(self, small_batch, lr):
@@ -206,9 +206,11 @@ class ANN:
                 self.perform_batch_updates(mini_batch, self.lr)
 
             print("Epoch ", str(i + 1), " done.")
-            score = self.score(validation_data)
-            self.epoch_score.append(score)
-            print("Score (accuracy) for this epoch = ", score)
+            score_val = self.score(validation_data)
+            self.epoch_score[0].append(score_val)
+            score_train = self.score(train_data)
+            self.epoch_score[1].append(score_train)
+            print("Score (accuracy) for this epoch on train: ", score_train, ", on validation: ", score_val)
 
     def only_fit(self, data, number_of_epochs):
         """
