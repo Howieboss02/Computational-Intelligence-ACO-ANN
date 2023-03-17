@@ -32,8 +32,8 @@ class GeneticAlgorithm:
 
         # Pick a random substring from the parent1
         chromosome_size = parent1.size()
-        startIndex = np.random.randint(0, high=chromosome_size)
-        max_length = chromosome_size - startIndex
+        start_index = np.random.randint(0, high=chromosome_size)
+        max_length = chromosome_size - start_index
         # Add +1 since high is exclusive
         substring_length = np.random.randint(1, high=max_length + 1)
 
@@ -42,7 +42,7 @@ class GeneticAlgorithm:
 
         # Copy the selected substring from the parent1 to the child
         set_of_genes = set()
-        for i in range(startIndex, startIndex + substring_length):
+        for i in range(start_index, start_index + substring_length):
             child_genes[i] = parent1_genes[i]
             set_of_genes.add(parent1_genes[i])
 
