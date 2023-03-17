@@ -24,10 +24,18 @@ class Chromosome:
         self.products = []
         self.score = 0
 
-    def fitness_function(self, distances_matrix):
+    def fitness_function(self, tsp_data):
         route_length = 0
+        distances_matrix = tsp_data.get_distances()
+        # Add starting distance (start distance from the first element from the products list)
+        route_length += tsp_data.get_start_distances()[self.products[0]]
+
         for product in range(len(self.products) - 1):
             route_length += distances_matrix[self.products[product]][self.products[product + 1]]
+
+        # Add ending distance (end distance from the last element from the products list)
+        route_length += tsp_data.get_end_distances()[self.products[len(self.products) - 1]]
+
         self.score = route_length
         return route_length
 
@@ -35,6 +43,7 @@ class Chromosome:
         products = np.arange(num_of_products)
         np.random.shuffle(products)
         self.products = products
+        return self
 
 
 class Population:
@@ -46,13 +55,16 @@ class Population:
         self.tsp_data = tsp_data
 
     def create_random_population(self, pop_size, num_of_products):
+        chromosomes = []
         for i in range(pop_size):
-            self.chromosomes.append(Chromosome().create_chromosome(num_of_products))
+            chromosomes.append(Chromosome().create_chromosome(num_of_products))
+        self.chromosomes = chromosomes
+        return chromosomes
 
     def calculate_population_fitness(self):
         fitness = 0
         for chromosome in self.chromosomes:
-            fitness += chromosome.fitness_function(self.tsp_data.get_distances())
+            fitness += chromosome.fitness_function(self.tsp_data)
         self.fitness_sum = fitness
         return fitness
 
