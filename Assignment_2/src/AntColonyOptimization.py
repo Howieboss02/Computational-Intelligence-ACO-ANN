@@ -28,16 +28,25 @@ class AntColonyOptimization:
         self.maze.reset()
 
         for n, generation in enumerate(range(self.generations)):
-            # print("generation: ", n)
             routes = []
+            best_route = None
+            avg_route = 0
+
             for ant_idx in range(self.ants_per_gen):
                 route = Ant(self.maze, path_specification, self.max_steps).find_route()
                 if (route is not None): routes.append(route)
+
+                if (best_route is None): best_route = route
+                elif (route is not None and route.size() < best_route.size()): best_route = route
+                if (route is not None): avg_route += route.size()
             
+            avg_route /= len(routes)
+
             self.maze.evaporate(self.evaporation)
             for route in routes:
                 self.maze.add_pheromone_route(route, self.q)
 
+            print("generation: ", n, ", best route: ", best_route.size(), ", avg route: ", avg_route)
         best_route = None
         for ant_idx in range(self.ants_per_gen):
             route = Ant(self.maze, path_specification, self.max_steps).find_route()

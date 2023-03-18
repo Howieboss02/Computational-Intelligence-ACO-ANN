@@ -44,7 +44,7 @@ class Ant:
 
             number_of_steps += 1
 
-        # print(number_of_steps)
+        # print(route.size())
         return route if self.current_position == self.end else None
 
     # Selects direction ro follow based on pheromones of surrounding fields.
