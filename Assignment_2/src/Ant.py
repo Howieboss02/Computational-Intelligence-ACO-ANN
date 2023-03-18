@@ -31,11 +31,11 @@ class Ant:
             selected_direction = self.select_direction()[0]
 
             self.visited_map[self.current_position.get_x()][self.current_position.get_y()] = True
-
             # if there are no directions to be taken go back one step
             if selected_direction is None:
                 self.current_position = self.visited_route.pop(-1)
                 route.remove_last()
+
             else:
                 route.add(selected_direction)
 

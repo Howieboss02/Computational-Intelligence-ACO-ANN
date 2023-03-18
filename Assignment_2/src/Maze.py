@@ -23,14 +23,37 @@ class Maze:
 
     # Initialize pheromones to a start value.
     def initialize_pheromones(self):
-        self.pheromones = copy.deepcopy(self.walls)
+        self.pheromones = []
+        for i in range(self.width):
+            self.pheromones.append([])
+            for j in range(self.length):
+                north = 0
+                south = 0
+                east = 0
+                west = 0
+                if i - 1 >= 0 and self.walls[i - 1][j] != 0:
+                    west = 1
+                if j + 1 < self.length and self.walls[i][j + 1] != 0:
+                    south = 1
+                if i + 1 < self.width and self.walls[i + 1][j] != 0:
+                    east = 1
+                if j - 1 >= 0 and self.walls[i][j - 1] != 0:
+                    north = 1
+
+                # append to list
+                self.pheromones[i].append(SurroundingPheromone(east, north, west, south))
 
     # Reset the maze for a new shortest path problem.
     def reset(self):
         self.initialize_pheromones()
 
-    def add_pheromone(self, position, pheromone):
-        self.pheromones[position.get_x()][position.get_y()] += pheromone
+    # add pheromone to a certain edge
+    # @param position Coordinate of the start of the edge
+    # @param pheromone amount of pheromone to add
+    # @param direction Direction of the edge
+    def add_pheromone(self, position, pheromone, direction):
+        if self.in_bounds(position):
+            self.pheromones[position.get_x()][position.get_y()].add_to_direction(direction, pheromone)
 
     # Update the pheromones along a certain route according to a certain Q
     # @param r The route of the ants
@@ -41,7 +64,7 @@ class Maze:
 
         for direction in route.get_route():
             position = position.add_direction(direction)
-            self.add_pheromone(position, q / L)
+            self.add_pheromone(position, q / L, direction)
 
      # Update pheromones for a list of routes
      # @param routes A list of routes
@@ -52,10 +75,14 @@ class Maze:
 
     # Evaporate pheromone
     # @param rho evaporation factor
+    
+    #TODO fix this
+
     def evaporate(self, rho):
+       
        for i in range(self.get_width()):
            for j in range(self.get_length()):
-            self.pheromones[i][j] = self.pheromones[i][j] * (1 - rho)
+            self.pheromones[i][j].evaporate_all(rho)
 
     # Width getter
     # @return width of the maze
@@ -71,18 +98,9 @@ class Maze:
     # @param position The position to check the neighbours of.
     # @return the pheromones of the neighbouring positions.
     def get_surrounding_pheromone(self, position):
-        return SurroundingPheromone(self.get_pheromone(position.add_direction(Direction.east)), 
-                                    self.get_pheromone(position.add_direction(Direction.north)), 
-                                    self.get_pheromone(position.add_direction(Direction.west)), 
-                                    self.get_pheromone(position.add_direction(Direction.south)))
-
-    # Pheromone getter for a specific position. If the position is not in bounds returns 0
-    # @param pos Position coordinate
-    # @return pheromone at point
-    def get_pheromone(self, pos):
-        if self.in_bounds(pos) and self.walls[pos.get_x()][pos.get_y()] != 0:
-            return self.pheromones[pos.get_x()][pos.get_y()]
-        return 0
+        if self.in_bounds(position):
+            return self.pheromones[position.get_x()][position.get_y()]
+        return None
 
     # Check whether a coordinate lies in the current maze.
     # @param position The position to be checked
