@@ -24,10 +24,10 @@ class Ant:
         route = Route(self.start)
 
         while (self.current_position != self.end and number_of_steps < self.max_steps):
-            selected_direction = self.select_direction()
+            selected_direction = self.select_direction()[0]
 
             # if there are no directions to be taken return empty route
-            if selected_direction == None:
+            if selected_direction is None:
                 return None
 
             route.add(selected_direction)
