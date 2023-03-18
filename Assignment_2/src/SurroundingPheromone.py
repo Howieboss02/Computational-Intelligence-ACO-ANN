@@ -10,9 +10,9 @@ class SurroundingPheromone:
     # @param west the amount of pheromone in the west.
     def __init__(self, north, east, south, west):
         self.north = north
+        self.east = east
         self.south = south
         self.west = west
-        self.east = east
         self.total_surrounding_pheromone = east + north + south + west
 
     # Get the total amount of surrouning pheromone.
