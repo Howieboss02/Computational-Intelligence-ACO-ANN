@@ -24,6 +24,27 @@ class SurroundingPheromone:
     # @return total surrounding pheromone
     def get_total_surrounding_pheromone(self):
         return self.total_surrounding_pheromone
+    
+     # Evaporate pheromone on all edges.
+    # @param rho value of evaporation
+    def evaporate_all(self, rho):
+        self.north *= (1 - rho)
+        self.east *= (1 - rho)
+        self.south *= (1 - rho)
+        self.west *= (1 - rho)
+    
+    # Add a pheromone value to the direction edge.
+    # @param Direction in which to add pheromone
+    # @param value of the pheromone to add
+    def add_to_direction(self, dir, value):
+        if dir == Direction.north:
+            self.north += value
+        elif dir == Direction.east:
+            self.east += value
+        elif dir == Direction.west:
+            self.west += value
+        elif dir == Direction.south:
+            self.south += value
 
     # Get a specific pheromone level
     # @param dir Direction of pheromone

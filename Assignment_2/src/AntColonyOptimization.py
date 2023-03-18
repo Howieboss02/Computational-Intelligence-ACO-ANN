@@ -27,7 +27,8 @@ class AntColonyOptimization:
     def find_shortest_route(self, path_specification):
         self.maze.reset()
 
-        for generation in range(self.generations):
+        for n, generation in enumerate(range(self.generations)):
+            print("generation: ", n)
             routes = []
             for ant_idx in range(self.ants_per_gen):
                 route = Ant(self.maze, path_specification, self.max_steps).find_route()
