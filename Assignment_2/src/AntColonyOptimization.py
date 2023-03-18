@@ -28,7 +28,7 @@ class AntColonyOptimization:
         self.maze.reset()
 
         for n, generation in enumerate(range(self.generations)):
-            print("generation: ", n)
+            # print("generation: ", n)
             routes = []
             for ant_idx in range(self.ants_per_gen):
                 route = Ant(self.maze, path_specification, self.max_steps).find_route()
