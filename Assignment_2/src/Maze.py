@@ -67,14 +67,14 @@ class Maze:
     def get_length(self):
         return self.length
 
-    # Returns a the amount of pheromones on the neighbouring positions (N/E/S/W).
+    # Returns a the amount of pheromones on the neighbouring positions (E/N/W/S).
     # @param position The position to check the neighbours of.
     # @return the pheromones of the neighbouring positions.
     def get_surrounding_pheromone(self, position):
-        return SurroundingPheromone(self.get_pheromone(position.add_direction(Direction.north)), 
-                                    self.get_pheromone(position.add_direction(Direction.east)), 
-                                    self.get_pheromone(position.add_direction(Direction.south)), 
-                                    self.get_pheromone(position.add_direction(Direction.west)))
+        return SurroundingPheromone(self.get_pheromone(position.add_direction(Direction.east)), 
+                                    self.get_pheromone(position.add_direction(Direction.north)), 
+                                    self.get_pheromone(position.add_direction(Direction.west)), 
+                                    self.get_pheromone(position.add_direction(Direction.south)))
 
     # Pheromone getter for a specific position. If the position is not in bounds returns 0
     # @param pos Position coordinate

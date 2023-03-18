@@ -8,17 +8,17 @@ class SurroundingPheromone:
     # @param east the amount of pheromone in the east.
     # @param south the amount of pheromone in the south.
     # @param west the amount of pheromone in the west.
-    def __init__(self, north, east, south, west):
+    def __init__(self, east, north, west, south):
         self.north = north
         self.east = east
         self.south = south
         self.west = west
         self.total_surrounding_pheromone = east + north + south + west
 
-    # Get surrounging pheromones in format (N/E/S/W).
+    # Get surrounging pheromones in format (E/N/W/S).
     # @return array of all surrounding pheromones.
     def get_all_pheromones_array(self):
-        return [self.north, self.east, self.south, self.west]
+        return [self.east, self.north, self.west, self.south]
 
     # Get the total amount of surrouning pheromone.
     # @return total surrounding pheromone
