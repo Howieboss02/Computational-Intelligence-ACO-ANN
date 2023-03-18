@@ -15,6 +15,11 @@ class SurroundingPheromone:
         self.west = west
         self.total_surrounding_pheromone = east + north + south + west
 
+    # Get surrounging pheromones in format (N/E/S/W).
+    # @return array of all surrounding pheromones.
+    def get_all_pheromones_array(self):
+        return [self.north, self.east, self.south, self.west]
+
     # Get the total amount of surrouning pheromone.
     # @return total surrounding pheromone
     def get_total_surrounding_pheromone(self):
