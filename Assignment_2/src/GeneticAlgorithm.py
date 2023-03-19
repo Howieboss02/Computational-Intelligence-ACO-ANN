@@ -82,7 +82,7 @@ class Chromosome:
         Setter for the products order in the chromosome
         :param products: new products order
         """
-        self.products = products
+        self.products = products.copy()
 
     def size(self):
         """
@@ -101,6 +101,20 @@ class Chromosome:
         products = np.arange(num_of_products)
         self.products = np.shuffle(products)
 
+    def inversion_mutation(self):
+        chromosome_size = self.size()
+        if chromosome_size <= 1:
+            return
+        position1 = np.random.randint(low=0, high=chromosome_size)
+        position2 = np.random.randint(low=0, high=chromosome_size)
+        while position1 == position2:
+            position2 = np.random.randint(low=0, high=chromosome_size)
+
+        gene1 = self.get_genes()[position1]
+        gene2 = self.get_genes()[position2]
+
+        self.products[position1] = gene2
+        self.products[position2] = gene1
 
 class Population:
     def __init__(self, mutation_prob, crossover_prob):
