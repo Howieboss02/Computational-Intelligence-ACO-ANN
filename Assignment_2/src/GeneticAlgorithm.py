@@ -18,6 +18,17 @@ class GeneticAlgorithm:
     def solve_tsp(self, tsp_data):
         return []
 
+    def roulette(self, population):
+        ratios = [0]
+        chromosomes = population.get_chromosomes()
+        total_sum = population
+        for i in chromosomes:
+            ratios.append(i.get_score / total_sum + ratios[i-1])
+        ratios.pop()
+
+        parent_1_value = random.random()
+        parent_2_value = random.random()
+
 
 class Chromosome:
     def __init__(self):
@@ -45,6 +56,9 @@ class Chromosome:
         self.products = products
         return self
 
+    def get_score(self):
+        return self.score
+
 
 class Population:
     def __init__(self, mutation_prob, crossover_prob, tsp_data):
@@ -67,6 +81,12 @@ class Population:
             fitness += chromosome.fitness_function(self.tsp_data)
         self.fitness_sum = fitness
         return fitness
+
+    def get_chromosomes(self):
+        return self.chromosomes
+
+    def get_fitness_sum(self):
+        return self.fitness_sum
 
 
 
