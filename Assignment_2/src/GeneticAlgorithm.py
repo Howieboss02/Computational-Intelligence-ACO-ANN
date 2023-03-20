@@ -9,15 +9,46 @@ class GeneticAlgorithm:
     # Constructs a new 'genetic algorithm' object.
     # @param generations the amount of generations.
     # @param popSize the population size.
-    def __init__(self, generations, pop_size):
+    def __init__(self, generations, pop_size, mutation_rate, crossover_probability):
         self.generations = generations
         self.pop_size = pop_size
+        self.mutation_rate = mutation_rate
+        self.crossover_probability = crossover_probability
 
     # This method should solve the TSP.
     # @param pd the TSP data.
     # @return the optimized product sequence.
     def solve_tsp(self, tsp_data):
-        return []
+        population = Population(mutation_prob=self.mutation_rate,
+                                crossover_prob=self.crossover_probability,
+                                tsp_data=tsp_data)
+        num_of_products = len(tsp_data.get_start_distances())
+        population.create_random_population(self.pop_size, num_of_products)
+        population.calculate_population_fitness()
+
+        for i in range(self.generations):
+            print("Generation ", i + 1)
+            chromosomes = []
+            for j in range(self.pop_size):
+                parents = GeneticAlgorithm.roulette(population)
+                # Crossover
+                rand = random.random()
+                if rand < self.crossover_probability:
+                    child = GeneticAlgorithm.OX_crossover(parents[0], parents[1])
+                else:
+                    child = parents[0]
+
+                # Mutation
+                rand = random.random()
+                if rand < self.mutation_rate:
+                    child.inversion_mutation()
+
+                chromosomes.append(child)
+
+            population.create_successor_population(chromosomes)
+
+        result = np.array(population.take_best_chromosome().get_genes()) - 1
+        return result.astype(int)
 
     @staticmethod
     def OX_crossover(parent1, parent2):
@@ -60,11 +91,13 @@ class GeneticAlgorithm:
                 idx += 1
 
         # Create final child chromosome
+        child_genes = child_genes.astype(int)
         result = Chromosome()
         result.set_genes(child_genes)
         return result
 
-    def roulette(self, population):
+    @staticmethod
+    def roulette(population):
         ratios = []
         chromosomes = population.get_chromosomes()
         total_sum = population.get_fitness_sum()
@@ -107,19 +140,20 @@ class Chromosome:
         route_length = 0
         distances_matrix = tsp_data.get_distances()
         # Add starting distance (start distance from the first element from the products list)
-        route_length += tsp_data.get_start_distances()[self.products[0]]
+        route_length += tsp_data.get_start_distances()[self.products[0] - 1]
 
         for product in range(len(self.products) - 1):
-            route_length += distances_matrix[self.products[product]][self.products[product + 1]]
+            route_length += distances_matrix[self.products[product] - 1][self.products[product + 1] - 1]
 
         # Add ending distance (end distance from the last element from the products list)
-        route_length += tsp_data.get_end_distances()[self.products[len(self.products) - 1]]
+        route_length += tsp_data.get_end_distances()[self.products[len(self.products) - 1] - 1]
 
         self.score = route_length
         return route_length
 
     def create_chromosome(self, num_of_products):
         products = np.arange(num_of_products)
+        products += 1
         np.random.shuffle(products)
         self.products = products
         return self
@@ -160,6 +194,10 @@ class Population:
         self.chromosomes = chromosomes
         return chromosomes
 
+    def create_successor_population(self, chromosomes):
+        self.chromosomes = chromosomes
+        self.fitness_sum = self.calculate_population_fitness()
+
     def calculate_population_fitness(self):
         fitness = 0
         for chromosome in self.chromosomes:
@@ -173,3 +211,12 @@ class Population:
     def get_fitness_sum(self):
         return self.fitness_sum
 
+    def take_best_chromosome(self):
+        curr_best_score = 2**62
+        best_chromosome = Chromosome()
+        for chrom in self.chromosomes:
+            score = chrom.get_score()
+            if score < curr_best_score:
+                best_chromosome = chrom
+                curr_best_score = score
+        return best_chromosome
