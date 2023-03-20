@@ -21,7 +21,7 @@ class GeneticAlgorithm:
     def roulette(self, population):
         ratios = []
         chromosomes = population.get_chromosomes()
-        total_sum = population.calculate_population_fitness()
+        total_sum = population.get_fitness_sum()
         for i in chromosomes:
             ratios.append(i.get_score() / total_sum)
 
@@ -32,6 +32,9 @@ class Chromosome:
     def __init__(self):
         self.products = []
         self.score = 0
+
+    def to_string(self):
+        return str(self.products) + " and score = " + str(self.score)
 
     def fitness_function(self, tsp_data):
         route_length = 0
