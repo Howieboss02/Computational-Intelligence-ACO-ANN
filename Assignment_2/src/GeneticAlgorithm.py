@@ -2,6 +2,7 @@ import random
 from TSPData import TSPData
 import numpy as np
 
+
 # TSP problem solver using genetic algorithms.
 
 
@@ -15,6 +16,9 @@ class GeneticAlgorithm:
         self.mutation_rate = mutation_rate
         self.crossover_probability = crossover_probability
 
+        self.population_fitness = []
+        self.population = None
+
     # This method should solve the TSP.
     # @param pd the TSP data.
     # @return the optimized product sequence.
@@ -22,15 +26,21 @@ class GeneticAlgorithm:
         population = Population(mutation_prob=self.mutation_rate,
                                 crossover_prob=self.crossover_probability,
                                 tsp_data=tsp_data)
+
         num_of_products = len(tsp_data.get_start_distances())
         population.create_random_population(self.pop_size, num_of_products)
         population.calculate_population_fitness()
+        self.population_fitness.append(population.get_fitness_sum())
 
         for i in range(self.generations):
             print("Generation ", i + 1)
             chromosomes = []
             for j in range(self.pop_size):
-                parents = GeneticAlgorithm.roulette(population)
+                # if population.get_fitness_sum() < 6000000:
+                #     parents = population.roulette_random()
+                # else:
+                # parents = population.roulette_two_best()
+                parents = population.roulette_sort_and_take_from_n((int)(0.2 * self.pop_size))
                 # Crossover
                 rand = random.random()
                 if rand < self.crossover_probability:
@@ -46,7 +56,9 @@ class GeneticAlgorithm:
                 chromosomes.append(child)
 
             population.create_successor_population(chromosomes)
+            self.population_fitness.append(population.get_fitness_sum())
 
+        self.population = population
         result = np.array(population.take_best_chromosome().get_genes()) - 1
         return result.astype(int)
 
@@ -96,16 +108,6 @@ class GeneticAlgorithm:
         result.set_genes(child_genes)
         return result
 
-    @staticmethod
-    def roulette(population):
-        ratios = []
-        chromosomes = population.get_chromosomes()
-        total_sum = population.get_fitness_sum()
-        for i in chromosomes:
-            ratios.append(i.get_score() / total_sum)
-
-        parents = random.choices(chromosomes, weights=ratios, k=2)
-        return parents
 
 class Chromosome:
     def __init__(self):
@@ -179,6 +181,7 @@ class Chromosome:
         self.products[position1] = gene2
         self.products[position2] = gene1
 
+
 class Population:
     def __init__(self, mutation_prob, crossover_prob, tsp_data):
         self.mutation_prob = mutation_prob
@@ -212,7 +215,7 @@ class Population:
         return self.fitness_sum
 
     def take_best_chromosome(self):
-        curr_best_score = 2**62
+        curr_best_score = 2 ** 62
         best_chromosome = Chromosome()
         for chrom in self.chromosomes:
             score = chrom.get_score()
@@ -220,3 +223,32 @@ class Population:
                 best_chromosome = chrom
                 curr_best_score = score
         return best_chromosome
+
+    def roulette_random(self):
+        ratios = []
+        chromosomes = self.get_chromosomes()
+        total_sum = self.get_fitness_sum()
+        for i in chromosomes:
+            ratios.append(i.get_score() / total_sum)
+
+        # print("Ratios before -1:", ratios)
+        ratios = 1 - np.array(ratios)
+        # print(ratios)
+        parents = random.choices(chromosomes, weights=ratios, k=2)
+        return parents
+
+    def roulette_two_best(self):
+        m1 = m2 = float('inf')
+        c1 = c2 = None
+        for chrom in self.chromosomes:
+            if chrom.get_score() <= m1:
+                m1, m2 = chrom.get_score(), m1
+                c1, c2 = chrom, c1
+            elif chrom.get_score() < m2:
+                m2 = chrom.get_score()
+                c2 = chrom
+        return [c1, c2]
+
+    def roulette_sort_and_take_from_n(self, n):
+        self.chromosomes = sorted(self.chromosomes, key=lambda x: x.get_score(), reverse=False)
+        return random.choices(self.chromosomes[:n], k=2)
