@@ -56,7 +56,6 @@ class Route:
     def __eq__(self, other):
         return self.start == other.start and self.route == other.route
 
-
     # Method that implements the specified format for writing a route to a file.
     # @param filePath path to route file.
     # @throws FileNotFoundException
