@@ -120,8 +120,6 @@ class Chromosome:
 
     def create_chromosome(self, num_of_products):
         products = np.arange(num_of_products)
-        self.products = np.shuffle(products)
-        products = np.arange(num_of_products)
         np.random.shuffle(products)
         self.products = products
         return self
