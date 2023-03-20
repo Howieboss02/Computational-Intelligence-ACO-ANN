@@ -19,16 +19,14 @@ class GeneticAlgorithm:
         return []
 
     def roulette(self, population):
-        ratios = [0]
+        ratios = []
         chromosomes = population.get_chromosomes()
-        total_sum = population
+        total_sum = population.calculate_population_fitness()
         for i in chromosomes:
-            ratios.append(i.get_score / total_sum + ratios[i-1])
-        ratios.pop()
+            ratios.append(i.get_score() / total_sum)
 
-        parent_1_value = random.random()
-        parent_2_value = random.random()
-
+        parents = random.choices(chromosomes, weights=ratios, k=2)
+        return parents
 
 class Chromosome:
     def __init__(self):
@@ -58,6 +56,9 @@ class Chromosome:
 
     def get_score(self):
         return self.score
+
+    def get_products(self):
+        return self.products
 
 
 class Population:
