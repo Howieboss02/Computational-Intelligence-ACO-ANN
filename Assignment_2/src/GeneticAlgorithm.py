@@ -17,6 +17,7 @@ class GeneticAlgorithm:
         self.crossover_probability = crossover_probability
 
         self.population_fitness = []
+        self.best_route_across_generation = []
         self.population = None
 
     # This method should solve the TSP.
@@ -31,16 +32,22 @@ class GeneticAlgorithm:
         population.create_random_population(self.pop_size, num_of_products)
         population.calculate_population_fitness()
         self.population_fitness.append(population.get_fitness_sum())
+        self.best_route_across_generation.append(population.take_best_chromosome().get_score())
 
         for i in range(self.generations):
             print("Generation ", i + 1)
             chromosomes = []
             for j in range(self.pop_size):
                 # if population.get_fitness_sum() < 6000000:
-                #     parents = population.roulette_random()
+                parents = population.roulette_random()
                 # else:
                 # parents = population.roulette_two_best()
-                parents = population.roulette_sort_and_take_from_n((int)(0.2 * self.pop_size))
+                # if random.random() <= 0.5:
+                #     parents = population.roulette_sort_and_take_from_n((int)(0.2 * self.pop_size))
+                # else:
+                #     parents = population.roulette_random()
+
+
                 # Crossover
                 rand = random.random()
                 if rand < self.crossover_probability:
@@ -57,6 +64,9 @@ class GeneticAlgorithm:
 
             population.create_successor_population(chromosomes)
             self.population_fitness.append(population.get_fitness_sum())
+            best_route = population.take_best_chromosome().get_score()
+            print("Length of the best route = ", 1.0 / best_route)
+            self.best_route_across_generation.append(best_route)
 
         self.population = population
         result = np.array(population.take_best_chromosome().get_genes()) - 1
@@ -115,7 +125,7 @@ class Chromosome:
         self.score = 0
 
     def to_string(self):
-        return str(self.products) + " and score = " + str(self.score)
+        return str(self.products) + " and score = " + str((1.0 / self.score))
 
     def get_genes(self):
         """
@@ -150,8 +160,10 @@ class Chromosome:
         # Add ending distance (end distance from the last element from the products list)
         route_length += tsp_data.get_end_distances()[self.products[len(self.products) - 1] - 1]
 
-        self.score = route_length
-        return route_length
+        # self.score = route_length
+        self.score = (float)(1.0 / route_length)
+        # return route_length
+        return (float)(1.0 / route_length)
 
     def create_chromosome(self, num_of_products):
         products = np.arange(num_of_products)
@@ -214,12 +226,21 @@ class Population:
     def get_fitness_sum(self):
         return self.fitness_sum
 
+    # def take_best_chromosome(self):
+    #     curr_best_score = 2 ** 62
+    #     best_chromosome = Chromosome()
+    #     for chrom in self.chromosomes:
+    #         score = chrom.get_score()
+    #         if score < curr_best_score:
+    #             best_chromosome = chrom
+    #             curr_best_score = score
+    #     return best_chromosome
     def take_best_chromosome(self):
-        curr_best_score = 2 ** 62
+        curr_best_score = -1
         best_chromosome = Chromosome()
         for chrom in self.chromosomes:
             score = chrom.get_score()
-            if score < curr_best_score:
+            if score > curr_best_score:
                 best_chromosome = chrom
                 curr_best_score = score
         return best_chromosome
@@ -232,11 +253,12 @@ class Population:
             ratios.append(i.get_score() / total_sum)
 
         # print("Ratios before -1:", ratios)
-        ratios = 1 - np.array(ratios)
+        # ratios = 1 - np.array(ratios)
         # print(ratios)
         parents = random.choices(chromosomes, weights=ratios, k=2)
         return parents
 
+    # Needs a change of direction
     def roulette_two_best(self):
         m1 = m2 = float('inf')
         c1 = c2 = None
@@ -249,6 +271,10 @@ class Population:
                 c2 = chrom
         return [c1, c2]
 
+    # Needs a change of direction
     def roulette_sort_and_take_from_n(self, n):
         self.chromosomes = sorted(self.chromosomes, key=lambda x: x.get_score(), reverse=False)
-        return random.choices(self.chromosomes[:n], k=2)
+        if random.random() < 0.8:
+            return random.choices(self.chromosomes[:n], k=2)
+        else:
+            return random.choices(self.chromosomes, k=2)
