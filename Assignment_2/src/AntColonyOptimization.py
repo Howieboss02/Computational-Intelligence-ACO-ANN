@@ -13,12 +13,14 @@ class AntColonyOptimization:
     # @param generations the amount of generations.
     # @param Q normalization factor for the amount of dropped pheromone
     # @param evaporation the evaporation factor.
-    def __init__(self, maze, ants_per_gen, generations, q, evaporation, max_steps = float('inf')):
+    # @param straight_factor The factor specifing how more likely the ant is to follow current direction
+    def __init__(self, maze, ants_per_gen, generations, q, evaporation, straight_factor = 1, max_steps = float('inf')):
         self.maze = maze
         self.ants_per_gen = ants_per_gen
         self.generations = generations
         self.q = q
         self.evaporation = evaporation
+        self.straight_factor = straight_factor
         self.max_steps = max_steps
 
      # Loop that starts the shortest path process
@@ -38,7 +40,7 @@ class AntColonyOptimization:
             for ant_idx in range(self.ants_per_gen):
 
                 #calculate route the ant take
-                route = Ant(self.maze, path_specification, self.max_steps).find_route()
+                route = Ant(self.maze, path_specification, self.straight_factor, self.max_steps).find_route()
                 if (route is not None): routes.append(route)
 
                 # calculate best route
