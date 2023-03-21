@@ -38,15 +38,7 @@ class GeneticAlgorithm:
             print("Generation ", i + 1)
             chromosomes = []
             for j in range(self.pop_size):
-                # if population.get_fitness_sum() < 6000000:
                 parents = population.roulette_random()
-                # else:
-                # parents = population.roulette_two_best()
-                # if random.random() <= 0.5:
-                #     parents = population.roulette_sort_and_take_from_n((int)(0.2 * self.pop_size))
-                # else:
-                #     parents = population.roulette_random()
-
 
                 # Crossover
                 rand = random.random()
@@ -160,10 +152,8 @@ class Chromosome:
         # Add ending distance (end distance from the last element from the products list)
         route_length += tsp_data.get_end_distances()[self.products[len(self.products) - 1] - 1]
 
-        # self.score = route_length
-        self.score = (float)(1.0 / route_length)
-        # return route_length
-        return (float)(1.0 / route_length)
+        self.score = 1.0 / route_length
+        return 1.0 / route_length
 
     def create_chromosome(self, num_of_products):
         products = np.arange(num_of_products)
@@ -226,15 +216,6 @@ class Population:
     def get_fitness_sum(self):
         return self.fitness_sum
 
-    # def take_best_chromosome(self):
-    #     curr_best_score = 2 ** 62
-    #     best_chromosome = Chromosome()
-    #     for chrom in self.chromosomes:
-    #         score = chrom.get_score()
-    #         if score < curr_best_score:
-    #             best_chromosome = chrom
-    #             curr_best_score = score
-    #     return best_chromosome
     def take_best_chromosome(self):
         curr_best_score = -1
         best_chromosome = Chromosome()
@@ -252,13 +233,10 @@ class Population:
         for i in chromosomes:
             ratios.append(i.get_score() / total_sum)
 
-        # print("Ratios before -1:", ratios)
-        # ratios = 1 - np.array(ratios)
-        # print(ratios)
-        parents = random.choices(chromosomes, weights=ratios, k=2)
-        return parents
+        return random.choices(chromosomes, weights=ratios, k=2)
 
     # Needs a change of direction
+    # Used to test different selection options
     def roulette_two_best(self):
         m1 = m2 = float('inf')
         c1 = c2 = None
@@ -272,6 +250,7 @@ class Population:
         return [c1, c2]
 
     # Needs a change of direction
+    # Used to test different selection options
     def roulette_sort_and_take_from_n(self, n):
         self.chromosomes = sorted(self.chromosomes, key=lambda x: x.get_score(), reverse=False)
         if random.random() < 0.8:
