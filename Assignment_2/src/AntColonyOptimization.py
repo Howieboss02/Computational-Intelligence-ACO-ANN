@@ -58,7 +58,7 @@ class AntColonyOptimization:
             self.maze.evaporate(self.evaporation)
             self.maze.add_pheromone_routes(routes, self.q)
 
-            print("generation: ", generation, ", best route: ", best_route.size(), ", avg route: ", avg_route)
+            # print("generation: ", generation, ", best route: ", best_route.size(), ", avg route: ", avg_route)
 
         best_route = None
         for route in best_routes:
