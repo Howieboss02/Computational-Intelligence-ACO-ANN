@@ -27,9 +27,12 @@ class AntColonyOptimization:
     def find_shortest_route(self, path_specification):
         self.maze.reset()
 
+        best_routes = []
+        avg_routes = []
+
         for n, generation in enumerate(range(self.generations)):
             routes = []
-            best_route = None
+            best_route = None       
             avg_route = 0
 
             for ant_idx in range(self.ants_per_gen):
@@ -40,11 +43,13 @@ class AntColonyOptimization:
                 elif (route is not None and route.size() < best_route.size()): best_route = route
                 if (route is not None): avg_route += route.size()
             
+            best_routes.append(best_route)
             avg_route /= len(routes)
 
+            avg_routes.append(avg_route)
+
             self.maze.evaporate(self.evaporation)
-            for route in routes:
-                self.maze.add_pheromone_route(route, self.q)
+            self.maze.add_pheromone_routes(routes, self.q)
 
             print("generation: ", n, ", best route: ", best_route.size(), ", avg route: ", avg_route)
         best_route = None
@@ -53,4 +58,4 @@ class AntColonyOptimization:
             if (best_route is None): best_route = route
             elif (route is not None and route.size() < best_route.size()): best_route = route
 
-        return best_route
+        return best_route, best_routes, avg_routes
