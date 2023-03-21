@@ -151,7 +151,6 @@ class Chromosome:
 
         # Add ending distance (end distance from the last element from the products list)
         route_length += tsp_data.get_end_distances()[self.products[len(self.products) - 1] - 1]
-
         self.score = 1.0 / route_length
         return 1.0 / route_length
 
@@ -168,7 +167,7 @@ class Chromosome:
     def get_products(self):
         return self.products
 
-    def inversion_mutation(self):
+    def swap_mutation(self):
         chromosome_size = self.size()
         if chromosome_size <= 1:
             return
@@ -182,6 +181,27 @@ class Chromosome:
 
         self.products[position1] = gene2
         self.products[position2] = gene1
+
+    def inversion_mutation(self):
+        chromosome_size = self.size()
+        # Pick a random substring
+        start_index = np.random.randint(0, high=chromosome_size)
+        max_length = chromosome_size - start_index
+        # Add +1 since high is exclusive
+        substring_length = np.random.randint(1, high=max_length + 1)
+
+        end_index = start_index + substring_length
+        i = start_index
+        j = end_index - 1
+        while i < j:
+            gene1 = self.get_genes()[i]
+            gene2 = self.get_genes()[j]
+
+            self.products[i] = gene2
+            self.products[j] = gene1
+            i += 1
+            j -= 1
+
 
 
 class Population:
