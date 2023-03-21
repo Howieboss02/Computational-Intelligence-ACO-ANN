@@ -30,32 +30,36 @@ class AntColonyOptimization:
         best_routes = []
         avg_routes = []
 
-        for n, generation in enumerate(range(self.generations)):
+        for generation in range(1, self.generations + 1):
             routes = []
             best_route = None       
             avg_route = 0
 
             for ant_idx in range(self.ants_per_gen):
+
+                #calculate route the ant take
                 route = Ant(self.maze, path_specification, self.max_steps).find_route()
                 if (route is not None): routes.append(route)
 
-                if (best_route is None): best_route = route
-                elif (route is not None and route.size() < best_route.size()): best_route = route
+                # calculate best route
+                if (best_route is None or route.size() < best_route.size()): best_route = route
+
+                # use route to calculate average route if route exists
                 if (route is not None): avg_route += route.size()
             
+            # record best and average routes
             best_routes.append(best_route)
             avg_route /= len(routes)
-
             avg_routes.append(avg_route)
 
+            # set pheromones in the maze
             self.maze.evaporate(self.evaporation)
             self.maze.add_pheromone_routes(routes, self.q)
 
-            print("generation: ", n, ", best route: ", best_route.size(), ", avg route: ", avg_route)
+            print("generation: ", generation, ", best route: ", best_route.size(), ", avg route: ", avg_route)
+
         best_route = None
-        for ant_idx in range(self.ants_per_gen):
-            route = Ant(self.maze, path_specification, self.max_steps).find_route()
-            if (best_route is None): best_route = route
-            elif (route is not None and route.size() < best_route.size()): best_route = route
+        for route in best_routes:
+            if (best_route is None or route.size() <= best_route.size()): best_route = route
 
         return best_route, best_routes, avg_routes
