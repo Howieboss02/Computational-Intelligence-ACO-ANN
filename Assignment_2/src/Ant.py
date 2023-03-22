@@ -12,13 +12,12 @@ class Ant:
     # @param rand The random object to use for randomization.
     # @param straight_factor The factor specifing how more likely the ant is to follow current direction
     # @param visited The list of visited coordinates.
-    def __init__(self, maze, path_specification, straight_factor, max_steps):
+    def __init__(self, maze, path_specification, straight_factor):
         self.maze = maze
         self.start = path_specification.get_start()
         self.end = path_specification.get_end()
         self.current_position = self.start
         self.straight_factor = straight_factor
-        self.max_steps = max_steps
         self.rand = random
         self.visited_route = []
         self.visited_map = [[False for j in range(self.maze.get_length())] for i in range(self.maze.get_width())] 
@@ -26,10 +25,9 @@ class Ant:
     # Method that performs a single run through the maze by the ant.
     # @return The route the ant found through the maze or None if ant didn't reach the end.
     def find_route(self):
-        number_of_steps = 0
         route = Route(self.start)
 
-        while (self.current_position != self.end and number_of_steps < self.max_steps):
+        while (self.current_position != self.end):
             last_direction = route.get_route()[-1] if route.size() > 0 else None
             selected_direction = self.select_direction(last_direction)[0]
 
@@ -44,8 +42,6 @@ class Ant:
 
                 self.visited_route.append(self.current_position)
                 self.current_position = self.current_position.add_direction(selected_direction)
-
-            number_of_steps += 1
 
         # print(route.size())
         return route if self.current_position == self.end else None
