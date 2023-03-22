@@ -65,8 +65,14 @@ class AntColonyOptimization:
             self.maze.add_pheromone_routes(routes, self.q)
 
             # if best route did not change for the convergence_steps, then terminate algorithm and return best route
-            if (best_route_since > self.convergence_steps): return best_route, best_routes, avg_routes
+            if (best_route_since > self.convergence_steps): 
+                # uncomment this for graphs
+                # return best_route, best_routes, avg_routes
+                return best_route
 
             # print("generation: ", generation, ", best route: ", best_route.size(), ", avg route: ", avg_route)
 
-        return best_route, best_routes, avg_routes
+        # uncomment this for graphs
+        # return best_route, best_routes, avg_routes
+
+        return best_route
